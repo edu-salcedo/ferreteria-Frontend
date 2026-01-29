@@ -142,35 +142,36 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                     </div>
 
                     {/* Imagen */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Imagen</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={e => {
-                                if (e.target.files && e.target.files[0]) {
-                                    setImageFile(e.target.files[0]);
-                                    setImg(URL.createObjectURL(e.target.files[0])); // Para mostrar preview
-                                }
-                            }}
-                            className="w-full border rounded px-3 py-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {img && (
-                            <img
-                                src={img}
-                                alt="Preview"
-                                className="mt-2 w-32 h-32 object-cover rounded border"
+                    <div className='flex gap-4'>
+                        <div className="w-1/2">
+                            <label className="block text-sm font-medium mb-1">Imagen</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setImageFile(e.target.files[0]);
+                                        setImg(URL.createObjectURL(e.target.files[0])); // Para mostrar preview
+                                    }
+                                }}
+                                className="w-full border rounded px-3 py-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                        )}
-                    </div>
+                            {img && (
+                                <img
+                                    src={img}
+                                    alt="Preview"
+                                    className="mt-2 w-32 h-32 object-cover rounded border"
+                                />
+                            )}
+                        </div>
+                        {/* dropdon category */}
+                        <div className='w-1/2'>
+                            <label className="block text-sm font-medium mb-1">Categoría</label>
+                            <CategoryDropdown selected={category} onSelect={handleSelectCategory} />
+                            {errors.category && <p className="text-red-500 text-sm mt-1">La categoría es obligatoria.</p>}
+                        </div>
 
-                    {/* dropdon category */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Categoría</label>
-                        <CategoryDropdown selected={category} onSelect={handleSelectCategory} />
-                        {errors.category && <p className="text-red-500 text-sm mt-1">La categoría es obligatoria.</p>}
                     </div>
-
 
                     {/* Cantidad */}
                     <div>
@@ -216,8 +217,8 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

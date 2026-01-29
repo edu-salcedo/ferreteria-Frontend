@@ -7,6 +7,8 @@ export default function SearchBar({ onInputChange }) {
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const containerRef = useRef(null);
 
+
+    //para hacer que el scroll siga la selección de la lista con flecha arriba/abajo
     const itemRefs = useRef({});  // 👈 refs por ID, no por índice
 
     const { data: products = [], loading, error } = useApi("/products", {}, true);

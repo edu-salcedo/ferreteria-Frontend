@@ -76,22 +76,23 @@ const ProductsAdmin = () => {
 
     return (
         <>
-            <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded mt-6 ml-6">
-                Agregar Producto
-            </button>
 
             <ProductModalForm show={showModalForm} onHide={() => setShowModalForm(false)} product={updateProduct} onSave={handleSave} />
 
-            <div className="flex flex-col md:flex-row items-center mt-10 mb-6 px-4">
-                <div className="w-full md:w-1/2 mb-4 md:mb-0">
+            <div className="flex flex-col md:flex-row items-center mt-5 px-4">
+                <div className="w-full md:w-1/3 mb-4 md:mb-0">
                     <SearchBar onInputChange={handleInputChange} />
                 </div>
-                <div className="w-full flex md:w-1/2 mx-4">
+                <div className="w-full flex md:w-1/3 mx-4">
                     <CategoryDropdown
                         selected={selectedCategory}
                         onSelect={handleCategorySelect}
                     />
                 </div>
+                <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded ml-6">
+                    Agregar Producto
+                </button>
+
             </div>
 
             <ProductList products={paginatedProducts} handleUpdate={handleUpdate} />

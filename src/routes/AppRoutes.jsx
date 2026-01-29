@@ -7,6 +7,7 @@ import ProductDetail from '../pages/products/ProductDetail';
 import Upload from '../pages/other/Upload';
 import ProductsAdmin from '../pages/products/ProductsAdmin';
 import Cart from '../pages/cart/Cart';
+import Checkout from '../pages/checkout/Checkout';
 
 const AppRoutes = () => (
 
@@ -17,6 +18,7 @@ const AppRoutes = () => (
         <Route path="/productos" element={<Products />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/carrito" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
     </Routes>
 
 );
