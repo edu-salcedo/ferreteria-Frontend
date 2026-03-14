@@ -3,16 +3,17 @@ import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
 const Cart = () => {
-    const [discount, setDiscount] = useState(0);
-    const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } = useCart();
+    const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity, displayPrice } = useCart();
 
     // 2. Calculamos el total aplicando el 40% a cada item
     const total = cart.reduce(
-        (acc, item) => acc + item.finalPrice * item.quantity,
+        (acc, item) => acc + displayPrice(item.finalPrice) * item.quantity,
         0
     );
-
-    const totalWithDiscount = total - (total * discount) / 100;
+    const subtotal = cart.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+    );
 
     if (cart.length === 0) {
         return (
@@ -43,18 +44,23 @@ const Cart = () => {
                                 Costo base: ${Math.round(item.price)}
                             </p>
                         </div>
+                        <div>
+                            <p className="text-sm text-gray-400">
+                                Precio unitario: ${Math.round(item.finalPrice)}
+                            </p>
+                        </div>
 
                         <div className="flex gap-4">
                             <div className="flex items-center gap-2">
-                                <button onClick={() => decreaseQuantity(item.id)} className="border px-2 rounded">-</button>
+                                <button onClick={() => decreaseQuantity(item.id)} className=" bg-gray-400 px-2 rounded">-</button>
                                 <span>{item.quantity}</span>
-                                <button onClick={() => increaseQuantity(item.id)} className="border px-2 rounded">+</button>
+                                <button onClick={() => increaseQuantity(item.id)} className="bg-gray-400 px-2 rounded">+</button>
                             </div>
                         </div>
 
                         {/* Subtotal del item con ganancia */}
                         <p className="font-semibold w-24 text-right">
-                            ${Math.round(item.finalPrice * item.quantity)}
+                            {Math.round(displayPrice(item.finalPrice * item.quantity))}
                         </p>
 
                         <button
@@ -68,31 +74,17 @@ const Cart = () => {
             </div>
 
             <div className="flex gap-4 mt-8 items-center justify-around border-t pt-6">
-                <button onClick={clearCart} className="border border-gray-300 px-4 py-2 rounded-lg">
+                <button onClick={clearCart} className="bg-red-500 text-white px-4 py-2 rounded-lg">
                     Vaciar carrito
                 </button>
 
-                <div className="flex items-center gap-2">
-                    <p>Descuento</p>
-                    <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={discount}
-                        onChange={(e) => setDiscount(Number(e.target.value))}
-                        className="border rounded px-2 w-20"
-                    />
-                    <span>%</span>
-                </div>
-
                 <div className="text-right">
-                    <p className="text-sm text-gray-500">Subtotal con ganancia: ${Math.round(total)}</p>
-                    <p className="text-2xl font-bold text-orange-600">
-                        Total Final: ${Math.round(totalWithDiscount)}
+                    <p className="text-sm text-gray-500">Subtotal compra: ${Math.round(subtotal)}</p>
+                    <p className="text-2xl font-bold text-gray-800">
+                        Total Final: ${Math.round(total)}
                     </p>
                 </div>
-
-                <Link to="/checkout" className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600">
+                <Link to="/checkout" className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600">
                     Comprar
                 </Link>
             </div>

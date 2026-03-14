@@ -41,14 +41,14 @@ const CategoryDropdown = ({ selected, onSelect, mode = "dropdown" }) => {
 
   // 🔹 MODO LISTA
   if (mode === "list") {
-    if (loading) return <p>Cargando categorías...</p>;
-    if (error) return <p className="text-red-500">Error al cargar categorías</p>;
+    if (loading) return <p className="p-3 text-sm text-gray-500">Cargando categorías...</p>;
+    if (error) return <p className="p-3 text-sm text-red-500">Error al cargar categorías</p>;
 
     return (
-      <ul className="space-y-2">
+      <ul className="text-left rounded-lg border border-gray-300 shadow-md p-2">
         <li
           onClick={() => handleSelect(null)}
-          className={`cursor-pointer px-3 py-2 rounded hover:bg-gray-200 ${!internalSelected ? "bg-blue-500 text-white font-semibold" : ""
+          className={`cursor-pointer px-3 rounded hover:bg-gray-200 ${!internalSelected ? "bg-blue-500 text-white" : ""
             }`}
         >
           Todas las categorías

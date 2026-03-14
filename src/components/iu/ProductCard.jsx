@@ -1,19 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
 
 const ProductCard = ({ id, img, name, priceBase, description, margin, finalPrice, showModal }) => {
-
+    const { isBudget } = useCart();
+    const displayPrice = isBudget ? finalPrice : (Math.ceil(finalPrice / 100) * 100).toLocaleString();
     return (
-        <div
-        // to={`/producto/${id}`}
-        // className="bg-white rounded-lg shadow-md p-4 
-        //            hover:shadow-xl hover:-translate-y-1 
-        //            transition-all duration-300 
-        //            flex flex-col text-center"
-        >
+        <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             {/* Imagen */}
             <Link
-                to={`/producto/${id}`} className="w-full h-40 flex items-center justify-center mb-4">
+                to={`/producto/${id}`} className="w-full h-30 flex items-center justify-center mb-4">
                 <img
                     src={`http://localhost:8080${img}`}
                     alt={name}
@@ -22,22 +18,23 @@ const ProductCard = ({ id, img, name, priceBase, description, margin, finalPrice
             </Link>
 
             {/* Nombre */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            <h3 className="text-base font-semibold text-gray-800 mb-1">
                 {name}
             </h3>
 
             {/* Descripción */}
             {description && (
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                <p className="text-base text-gray-600 mb-2 line-clamp-2">
                     {margin}
                 </p>
             )}
 
             {/* Precio */}
             {priceBase && (
-                <div className="text-xl font-bold mt-auto flex justify-around">
+                <div className="text-base font-bold mt-auto flex justify-around">
                     <p className="text-gray-500">${priceBase}</p>
-                    <p className="text-green-500 font-bold">${finalPrice}</p>
+                    <p className="text-green-500 font-bold">${displayPrice}</p>
+
                 </div>
             )}
             <button

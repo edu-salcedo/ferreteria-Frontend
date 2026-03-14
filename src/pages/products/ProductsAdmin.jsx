@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useEffect, useState } from "react";
+import { useNavigate, useLocation, useMatch } from 'react-router-dom';
 import SearchBar from "../../components/iu/SearchBar";
 import CategoryDropdown from "../../components/iu/CategoryDropdown";
 import ProductList from "./ProductList";
@@ -8,12 +8,11 @@ import Pagination from "../../components/iu/Pagination";
 import { useApi } from "../../hooks/useApi";
 
 const ProductsAdmin = () => {
-
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [updateProduct, setUpdateProduct] = useState(null);
     const [showModalForm, setShowModalForm] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+
     const pageSize = 20;
 
     const { data: productList, loading, error, refetch, create, update } = useApi('products');
@@ -48,25 +47,42 @@ const ProductsAdmin = () => {
 
     };
 
-    const handleInputChange = (e) => {
-        setSearchTerm(e);
-    };
 
-    const handleCategorySelect = (category) => {
-        setSelectedCategory(category);
+
+    const params = useMemo(
+        () => new URLSearchParams(location.search),
+        [location.search]
+    );
+    const searchTerm = params.get("search") || "";
+    const categoryId = params.get("category");
+    const currentPage = Number(params.get("page")) || 1;
+    const selectedCategory = categoryId
+        ? { id: Number(categoryId) }
+        : null;
+
+
+    const updateParams = (updates) => {
+        const newParams = new URLSearchParams(location.search);
+
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === "" || value === undefined) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        });
+
+        navigate({ search: newParams.toString() });
     };
 
 
     // Filtrar productos según búsqueda y categoría seleccionada
     const filteredProducts = (productList ?? []).filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory ? product.categoryId === selectedCategory.id : true;
+        const matchesCategory = selectedCategory ? Number(product.categoryId) === selectedCategory.id : true;
         return matchesSearch && matchesCategory;
     });
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, selectedCategory]);
 
     // --- Calcular paginación ---
     const totalPages = Math.ceil(filteredProducts.length / pageSize);
@@ -78,26 +94,44 @@ const ProductsAdmin = () => {
         <>
 
             <ProductModalForm show={showModalForm} onHide={() => setShowModalForm(false)} product={updateProduct} onSave={handleSave} />
+            <div className="grid grid-cols-12 gap-4 mt-2">
+                <div className="col-span-2 min-h-screen ">
+                    <div className="sticky top-4">
 
-            <div className="flex flex-col md:flex-row items-center mt-5 px-4">
-                <div className="w-full md:w-1/3 mb-4 md:mb-0">
-                    <SearchBar onInputChange={handleInputChange} />
+                        <CategoryDropdown
+                            mode="list"
+                            selected={selectedCategory}
+                            onSelect={(cat) =>
+                                updateParams({
+                                    category: cat?.id ?? null,
+                                    page: 1,
+                                })
+                            }
+
+                        />
+                    </div>
                 </div>
-                <div className="w-full flex md:w-1/3 mx-4">
-                    <CategoryDropdown
-                        selected={selectedCategory}
-                        onSelect={handleCategorySelect}
-                    />
+                <div className="col-span-10">
+
+                    <div className="flex flex-col md:flex-row items-center mt-5 px-4">
+                        <div className="w-full md:w-1/3 mb-4 md:mb-0">
+
+                            <SearchBar value={searchTerm} onInputChange={(value) => updateParams({ search: value, page: 1 })} />
+                        </div>
+
+                        <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded ml-6">
+                            Agregar Producto
+                        </button>
+
+                    </div>
+                    {loading && <p>Cargando productos...</p>}
+                    {error && <p>Error al cargar productos: {error.message}</p>}
+                    <ProductList products={paginatedProducts} handleUpdate={handleUpdate} />
                 </div>
-                <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded ml-6">
-                    Agregar Producto
-                </button>
 
             </div>
 
-            <ProductList products={paginatedProducts} handleUpdate={handleUpdate} />
-
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => updateParams({ page })} />
         </>
     );
 };

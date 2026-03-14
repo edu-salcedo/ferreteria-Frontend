@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
 
-export default function Header() {
+const Header = () => {
+
     const [isOpen, setIsOpen] = useState(false);
-    const { cart } = useCart();
+    const { cart, isBudget, toggleBudget } = useCart();
     // const totalQuantity = cart.reduce((acu, product) => acu + product.quantity, 0)
     return (
         <nav className="bg-white shadow-md">
@@ -14,7 +15,7 @@ export default function Header() {
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link to="/" className="text-2xl font-bold text-orange-600">
-                            Ferreteria
+                            VERS Sanitario
                         </Link>
                     </div>
 
@@ -25,7 +26,9 @@ export default function Header() {
                         <Link to="/productos" className="text-gray-700 hover:text-orange-600">Productos</Link>
                         <Link to="/upload" className="text-gray-700 hover:text-orange-600">Subir archivo</Link>
                         <Link to="/checkout" className="text-gray-700 hover:text-orange-600">checkout</Link>
-
+                        <button onClick={toggleBudget} className={`text-white hover:bg-orange-600 bg-gray-400 rounded p-2 ${isBudget ? 'font-bold' : ''}`}>
+                            {isBudget ? 'Modo Presupuesto' : 'Modo Venta'}
+                        </button>
                     </div>
 
                     {/* Mobile menu button */}
@@ -79,3 +82,5 @@ export default function Header() {
         </nav>
     );
 }
+
+export default Header;

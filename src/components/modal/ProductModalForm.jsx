@@ -11,8 +11,9 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
     const [category, setCategory] = useState(null);
     const [price, setPrice] = useState('');
     const [stock, setStock] = useState(1);
+    const [profitMargin, setProfitMargin] = useState('');
     const { create, update } = useApi(API_URL);
-    const [errors, setErrors] = useState({ name: false, category: false, stock: false, price: false });
+    const [errors, setErrors] = useState({ name: false, category: false, stock: false, price: false, profitMargin: false });
     const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
@@ -56,6 +57,7 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                 categoryId: category?.id,
                 stock: Number(stock),
                 price: Number(price),
+                profitMargin: Number(profitMargin),
             };
 
             // Creamos FormData
@@ -69,12 +71,6 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
             if (imageFile) {
                 // Si hay archivo nuevo, se envía
                 formData.append("image", imageFile);
-            } else if (img) {
-                // Si no hay archivo nuevo pero existe una imagen previa, la convertimos en File
-                const res = await fetch(img);
-                const blob = await res.blob();
-                const filename = img.split('/').pop();
-                formData.append("image", new File([blob], filename, { type: blob.type }));
             }
 
             // Llamada a la API
@@ -173,33 +169,51 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
 
                     </div>
 
-                    {/* Cantidad */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Cantidad</label>
-                        <input
-                            type="number"
-                            value={stock}
-                            onChange={e => {
-                                setStock(e.target.value);
-                                if (errors.stock && Number(e.target.value) > 0) {
-                                    setErrors(prev => ({ ...prev, stock: false }));
-                                }
-                            }}
-                            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.stock ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {errors.stock && <p className="text-red-500 text-sm mt-1">La cantidad debe ser mayor que 0.</p>}
-                    </div>
+                    <div className='flex gap-4'>
+                        {/* Cantidad */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Cantidad</label>
+                            <input
+                                type="number"
+                                value={stock}
+                                onChange={e => {
+                                    setStock(e.target.value);
+                                    if (errors.stock && Number(e.target.value) > 0) {
+                                        setErrors(prev => ({ ...prev, stock: false }));
+                                    }
+                                }}
+                                className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.stock ? 'border-red-500' : 'border-gray-300'}`}
+                            />
+                            {errors.stock && <p className="text-red-500 text-sm mt-1">La cantidad debe ser mayor que 0.</p>}
+                        </div>
 
-                    {/* Precio */}
+                        {/* Precio */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Precio</label>
+                            <input
+                                type="number"
+                                value={price}
+                                onChange={e => {
+                                    setPrice(e.target.value);
+                                    if (errors.price && Number(e.target.value) > 0) {
+                                        setErrors(prev => ({ ...prev, price: false }));
+                                    }
+                                }}
+                                className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
+                            />
+                            {errors.price && <p className="text-red-500 text-sm mt-1">El precio debe ser mayor que 0.</p>}
+                        </div>
+
+                    </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1">Precio</label>
+                        <label className="block text-sm font-medium mb-1">Porcentaje de ganacia</label>
                         <input
                             type="number"
-                            value={price}
+                            value={profitMargin}
                             onChange={e => {
-                                setPrice(e.target.value);
-                                if (errors.price && Number(e.target.value) > 0) {
-                                    setErrors(prev => ({ ...prev, price: false }));
+                                setProfitMargin(e.target.value);
+                                if (errors.profitMargin && Number(e.target.value) > 0) {
+                                    setErrors(prev => ({ ...prev, profitMargin: false }));
                                 }
                             }}
                             className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`}

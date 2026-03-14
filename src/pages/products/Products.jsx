@@ -9,7 +9,7 @@ import AddToCartModal from "../../components/modal/AddToCartModal";
 import { useCart } from "../../context/CartContext";
 
 const Products = () => {
-    const { addToCart } = useCart();
+    const { addToCart, isBudget } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
     const pageSize = 12;
@@ -19,7 +19,6 @@ const Products = () => {
 
     const { data: productList, loading } = useApi("products");
     const products = Array.isArray(productList) ? productList : [];
-    console.log("Productos cargados:", products.map(p => p.profitMargin));
 
     /* 🔹 DERIVAR ESTADO DESDE LA URL */
     const params = useMemo(
@@ -96,7 +95,7 @@ const Products = () => {
         <>
             <div className="grid grid-cols-12 gap-4 mt-2">
                 {/* Sidebar */}
-                <div className="col-span-2 p-4">
+                <div className="col-span-2 p-2 min-h-screen">
                     <CategoryDropdown
                         mode="list"
                         selected={selectedCategory}
@@ -134,7 +133,7 @@ const Products = () => {
                                         priceBase={product.price}
                                         description={product.description}
                                         margin={product.profitMargin}
-                                        finalPrice={product.finalPrice.toLocaleString()}
+                                        finalPrice={product.finalPrice}
                                         showModal={() => handleOpenModal(product)}
                                     />
                                 ))}
