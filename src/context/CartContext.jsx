@@ -4,8 +4,6 @@ import { toast } from "react-toastify";
 const CartContext = createContext();
 
 const CartProvider = ({ children }) => {
-
-    const [isBudget, setIsBudget] = useState(false);
     // Cargar carrito desde localStorage al iniciar
     const [cart, setCart] = useState(() => {
         const savedCart = localStorage.getItem("cart");
@@ -67,16 +65,9 @@ const CartProvider = ({ children }) => {
         setCart([]);
         toast.info("Carrito vaciado");
     };
-    const toggleBudget = () => {
-        setIsBudget(prev => !prev);
-
-    };
-    const displayPrice = (priceXquantity) => {
-        return isBudget ? priceXquantity : (Math.ceil(priceXquantity / 100) * 100);
-    };
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart, isBudget, toggleBudget, displayPrice }}>
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart }}>
             {children}
         </CartContext.Provider>
     );

@@ -9,7 +9,7 @@ import AddToCartModal from "../../components/modal/AddToCartModal";
 import { useCart } from "../../context/CartContext";
 
 const Products = () => {
-    const { addToCart, isBudget } = useCart();
+    const { addToCart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
     const pageSize = 12;
@@ -73,8 +73,8 @@ const Products = () => {
             {
                 id: product.id,
                 name: product.name,
-                price: product.price,
-                finalPrice: product.finalPrice,
+                purchasePrice: product.purchasePrice,
+                salePrice: product.salePrice,
                 img: product.img,
             },
             quantity
@@ -127,14 +127,9 @@ const Products = () => {
                                 {paginatedProducts.map(product => (
                                     <ProductCard
                                         key={product.id}
-                                        id={product.id}
-                                        img={product.img}
-                                        name={product.name}
-                                        priceBase={product.price}
-                                        description={product.description}
-                                        margin={product.profitMargin}
-                                        finalPrice={product.finalPrice}
+                                        product={product}
                                         showModal={() => handleOpenModal(product)}
+
                                     />
                                 ))}
                             </div>

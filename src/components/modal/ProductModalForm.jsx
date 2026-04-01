@@ -26,7 +26,8 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                 name: product.categoryName,
             } : null);
             setStock(product.stock || 1);
-            setPrice(product.price || 0);
+            setPrice(product.purchasePrice || 0);
+            setProfitMargin(product.profitMargin || 0);
             setImageFile(null);
         } else {
             setName('');
@@ -36,6 +37,8 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
             setStock(1);
             setPrice('');
             setImageFile(null);
+            setProfitMargin('');
+            setErrors({ name: false, category: false, stock: false, price: false, profitMargin: false });
         }
     }, [product, show]);
 
@@ -47,25 +50,24 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
         if (!category) return setErrors(prev => ({ ...prev, category: true }));
         if (Number(stock) <= 0) return setErrors(prev => ({ ...prev, stock: true }));
         if (Number(price) <= 0) return setErrors(prev => ({ ...prev, price: true }));
+        if (Number(profitMargin) <= 0) return setErrors(prev => ({ ...prev, profitMargin: true }));
 
         try {
             // Construimos el objeto del producto sin la propiedad 'img'
             const productData = {
                 id: product?.id || null,
-                name,
-                description,
-                categoryId: category?.id,
-                stock: Number(stock),
-                price: Number(price),
-                profitMargin: Number(profitMargin),
+                name: name.trim() || "Sin nombre",
+                description: description.trim() || "",
+                categoryId: category?.id || null,
+                stock: Number(stock) || 0,
+                purchasePrice: price ? Number(price) : BigInt(0),
+                profitMargin: profitMargin ? Number(profitMargin) : 0,
+                state: product?.state ?? true,
             };
 
             // Creamos FormData
             const formData = new FormData();
-            formData.append(
-                "product",
-                new Blob([JSON.stringify(productData)], { type: "application/json" })
-            );
+            formData.append("product", JSON.stringify(productData));
 
             // Manejo de imagen
             if (imageFile) {
@@ -101,7 +103,7 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">{product ? "Editando producto" : "Nuevo producto"}</h2>
-                    <button onClick={onHide} className="text-gray-500 hover:text-gray-700">&times;</button>
+                    <button onClick={onHide} className="text-gray-500 text-3xl hover:text-gray-700 ">&times;</button>
                 </div>
 
                 {/* Form */}
@@ -153,8 +155,10 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                                 className="w-full border rounded px-3 py-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                             {img && (
+
                                 <img
                                     src={img}
+
                                     alt="Preview"
                                     className="mt-2 w-32 h-32 object-cover rounded border"
                                 />
@@ -165,6 +169,9 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                             <label className="block text-sm font-medium mb-1">Categoría</label>
                             <CategoryDropdown selected={category} onSelect={handleSelectCategory} />
                             {errors.category && <p className="text-red-500 text-sm mt-1">La categoría es obligatoria.</p>}
+                            <p className="text-xs text-gray-500 mt-5">
+                                {img}
+                            </p>
                         </div>
 
                     </div>

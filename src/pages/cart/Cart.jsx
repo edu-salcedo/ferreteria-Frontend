@@ -3,15 +3,17 @@ import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
 const Cart = () => {
-    const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity, displayPrice } = useCart();
+    const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } = useCart();
 
     // 2. Calculamos el total aplicando el 40% a cada item
     const total = cart.reduce(
-        (acc, item) => acc + displayPrice(item.finalPrice) * item.quantity,
+        (acc, item) =>
+            acc + (Number(item.salePrice) || 0) * (Number(item.quantity) || 0),
         0
     );
     const subtotal = cart.reduce(
-        (acc, item) => acc + item.price * item.quantity,
+        (acc, item) =>
+            acc + (Number(item.purchasePrice) || 0) * (Number(item.quantity) || 0),
         0
     );
 
@@ -41,12 +43,12 @@ const Cart = () => {
                             <h3 className="font-semibold">{item.name}</h3>
                             {/* Mostramos el precio unitario con el 40% ya sumado */}
                             <p className="text-sm text-gray-400">
-                                Costo base: ${Math.round(item.price)}
+                                Costo base: ${Math.round(item.purchasePrice)} | Precio venta: ${Math.round(item.salePrice)}
                             </p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-400">
-                                Precio unitario: ${Math.round(item.finalPrice)}
+                                Precio unitario: ${Math.round(item.salePrice)}
                             </p>
                         </div>
 
@@ -60,7 +62,7 @@ const Cart = () => {
 
                         {/* Subtotal del item con ganancia */}
                         <p className="font-semibold w-24 text-right">
-                            {Math.round(displayPrice(item.finalPrice * item.quantity))}
+                            {Math.round((Number(item.salePrice) || 0) * (Number(item.quantity) || 0))}
                         </p>
 
                         <button

@@ -27,8 +27,8 @@ export default function ProductDetail() {
             {
                 id: product.id,
                 name: product.name,
-                price: product.price,
-                finalPrice: product.finalPrice,
+                price: product.purchasePrice,
+                finalPrice: product.salePrice,
                 img: product.img,
             },
             quantity
@@ -59,7 +59,7 @@ export default function ProductDetail() {
                     </h1>
 
                     <p className="text-4xl text-green-600 font-bold mb-6">
-                        ${product.finalPrice.toLocaleString()}
+                        ${product.salePrice.toLocaleString()}
                     </p>
 
                     {!outOfStock && (

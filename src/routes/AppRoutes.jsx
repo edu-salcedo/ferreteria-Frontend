@@ -8,6 +8,7 @@ import Upload from '../pages/other/Upload';
 import ProductsAdmin from '../pages/products/ProductsAdmin';
 import Cart from '../pages/cart/Cart';
 import Checkout from '../pages/checkout/Checkout';
+import SalesDashboard from '../pages/sales/SalesDashboard';
 
 const AppRoutes = () => (
 
@@ -19,6 +20,7 @@ const AppRoutes = () => (
         <Route path="/upload" element={<Upload />} />
         <Route path="/carrito" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/ventas" element={<SalesDashboard />} />
     </Routes>
 
 );

@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 const Header = () => {
 
     const [isOpen, setIsOpen] = useState(false);
-    const { cart, isBudget, toggleBudget } = useCart();
+    const { cart } = useCart();
     // const totalQuantity = cart.reduce((acu, product) => acu + product.quantity, 0)
     return (
         <nav className="bg-white shadow-md">
@@ -26,9 +26,7 @@ const Header = () => {
                         <Link to="/productos" className="text-gray-700 hover:text-orange-600">Productos</Link>
                         <Link to="/upload" className="text-gray-700 hover:text-orange-600">Subir archivo</Link>
                         <Link to="/checkout" className="text-gray-700 hover:text-orange-600">checkout</Link>
-                        <button onClick={toggleBudget} className={`text-white hover:bg-orange-600 bg-gray-400 rounded p-2 ${isBudget ? 'font-bold' : ''}`}>
-                            {isBudget ? 'Modo Presupuesto' : 'Modo Venta'}
-                        </button>
+                        <Link to="/ventas" className="text-gray-700 hover:text-orange-600">Ventas</Link>
                     </div>
 
                     {/* Mobile menu button */}

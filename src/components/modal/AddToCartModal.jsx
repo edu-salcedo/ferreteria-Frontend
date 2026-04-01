@@ -23,7 +23,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
                     <div className="w-2/3">
                         {/* Contenido */}
                         <h2 className="text-xl font-semibold mb-4">{product.name}</h2>
-                        <p className="mb-2">Precio: ${product.finalPrice.toLocaleString()}</p>
+                        <p className="mb-2">Precio: ${product.salePrice.toLocaleString()}</p>
                         <p className="mb-4">{product.description}</p>
 
                         {/* Selección de cantidad */}

@@ -38,12 +38,12 @@ const ProductList = ({ products, handleUpdate }) => {
 
                                 {/* Precio original */}
                                 <td className="px-4 py-2 text-gray-500">
-                                    ${Number(p.price).toLocaleString()}
+                                    ${Number(p.purchasePrice).toLocaleString()}
                                 </td>
 
                                 {/* Precio con ganancia aplicada y redondeado */}
                                 <td className="px-4 py-2 font-bold text-green-600">
-                                    $ {p.finalPrice.toLocaleString()}
+                                    $  {p.salePrice.toLocaleString()}
                                 </td>
 
                                 <td className="px-4 py-2">{p.stock}</td>
