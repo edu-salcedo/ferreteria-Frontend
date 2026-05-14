@@ -1,18 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { useApi } from "../../hooks/useApi";
+import Fuse from "fuse.js";
 
 export default function SearchBar({ onInputChange }) {
     const [query, setQuery] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const containerRef = useRef(null);
+    const { data: products = [], loading, error } = useApi("/products", {}, true);
 
 
     //para hacer que el scroll siga la selección de la lista con flecha arriba/abajo
     const itemRefs = useRef({});  // 👈 refs por ID, no por índice
 
-    const { data: products = [], loading, error } = useApi("/products", {}, true);
-
+    const fuse = new Fuse(products || [], {
+        keys: ["name"],
+        threshold: 0.4, // 🔥 cuanto más bajo = más exacto
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+    });
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (containerRef.current && !containerRef.current.contains(event.target)) {

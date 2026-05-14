@@ -9,6 +9,7 @@ const Cart = () => {
     const total = cart.reduce(
         (acc, item) =>
             acc + (Number(item.salePrice) || 0) * (Number(item.quantity) || 0),
+
         0
     );
     const subtotal = cart.reduce(
@@ -43,7 +44,7 @@ const Cart = () => {
                             <h3 className="font-semibold">{item.name}</h3>
                             {/* Mostramos el precio unitario con el 40% ya sumado */}
                             <p className="text-sm text-gray-400">
-                                Costo base: ${Math.round(item.purchasePrice)} | Precio venta: ${Math.round(item.salePrice)}
+                                {/* Costo base: ${Math.round(item.purchasePrice)} | Precio venta: ${Math.round(item.salePrice)} */}
                             </p>
                         </div>
                         <div>

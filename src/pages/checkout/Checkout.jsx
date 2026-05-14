@@ -7,6 +7,7 @@ import axios from "axios";
 import InvoiceA4 from "../../components/invoice/InvoiceA4";
 
 const Checkout = () => {
+    const [isBudget, setIsBudget] = useState(false);
     const { cart, clearCart } = useCart();
     const [orderResponse, setOrderResponse] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -47,7 +48,7 @@ const Checkout = () => {
 
         setMode(type); // Presupuesto o venta
         setLoading(true);
-
+        console.log(type);
         try {
             // Preparar payload
             const payload = {
@@ -63,6 +64,7 @@ const Checkout = () => {
                 res = await axios.post("http://localhost:8080/order/preview", payload);
                 toast.success("Presupuesto generado");
             } else {
+                console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
                 res = await axios.post("http://localhost:8080/order", payload);
                 toast.success("Compra realizada con éxito");
@@ -97,7 +99,10 @@ const Checkout = () => {
 
     return (
         <div className="max-w-4xl mx-auto mt-10 px-4">
-            <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+            <div className="flex justify-center gap-6 mb-6">
+                <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+            </div>
+
 
             {cart.length === 0 && !orderResponse && <p>Tu carrito está vacío</p>}
 
@@ -156,6 +161,12 @@ const Checkout = () => {
                             )}
                             <h2 className="text-2xl font-bold">Total final: ${Math.floor(totalWithDiscount)}</h2>
                         </div>
+
+                        <div>
+                            <button onClick={() => setIsBudget(prev => !prev)} className="bg-gray-400 rounded px-4 py-2 text-sm text-white">
+                                {isBudget ? "Cambiar a Venta" : "Cambiar a Presupuesto"}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex gap-4 bg-red-200 ">
@@ -205,6 +216,7 @@ const Checkout = () => {
                         discount={discount}
                         paymentMethod={paymentMethod.toLocaleLowerCase()}
                         mode={mode}
+                        isBudget={isBudget}
                     />
                 </div>
             )}

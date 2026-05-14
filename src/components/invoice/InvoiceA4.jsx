@@ -5,7 +5,8 @@ const InvoiceA4 = forwardRef(
         {
             orderResponse,
             mode = "budget",         // "budget" o "sale"
-            paymentMethod = "efectivo"
+            paymentMethod = "efectivo",
+            isBudget
         },
         ref
     ) => {
@@ -28,8 +29,8 @@ const InvoiceA4 = forwardRef(
 
         return (
             <div
-                ref={ref}
-                className="w-[190mm] min-h-[290mm] mx-auto flex flex-col text-[11px] font-sans text-black p-4"
+                ref={ref}                                                                      //text-blue-800
+                className="w-[190mm] min-h-[290mm] mx-auto flex flex-col text-[11px] font-sans  text--800 p-4"
             >
                 {/* HEADER */}
                 <div className="flex justify-between border-b-2 mt-4 p-3">
@@ -66,7 +67,7 @@ const InvoiceA4 = forwardRef(
                     </div>
                     <div>
                         <p><strong>DNI/CUIT:</strong> {orderResponse?.customerDni || "-"}</p>
-                        <p><strong>Pago:</strong> {paymentMethod === "tarjeta" ? "Tarjeta" : "Efectivo"}</p>
+                        <p><strong>Pago:</strong></p>
                         <p><strong>Vendedor:</strong> {orderResponse?.seller || "-"}</p>
                     </div>
                 </div>
@@ -77,7 +78,7 @@ const InvoiceA4 = forwardRef(
                         <tr>
                             <th className="p-1 text-start">CANT</th>
                             <th className="p-1 text-start">DESCRIPCIÓN</th>
-                            <th className="p-1 text-start">PRECIO</th>
+                            <th className="p-1 text-start">PRECIO UNI</th>
                             <th className="p-1 text-start">DTO%</th>
                             <th className="p-1 text-start">PRECIO C/D</th>
                             <th className="p-1 text-start">TOTAL</th>
@@ -91,9 +92,9 @@ const InvoiceA4 = forwardRef(
 
                                     <td className="pl-3">{item.quantity}</td>
                                     <td className="p-1">{item.productName || "Producto"}</td>
-                                    <td className="p-1">$ {formatPrice(item.salePrice)}</td>
+                                    <td className="p-1">$ {formatPrice(item.unitePrice)}</td>
                                     <td className="p-1">{item.discountApplied > 0 ? `${item.discountApplied}%` : "-"}</td>
-                                    <td className="p-1">$ {formatPrice(item.salePriceFinal)}</td>
+                                    <td className="p-1">{isBudget ? "$" + formatPrice(item.finalPrice) : ""}</td>
                                     <td className="p-1">$ {formatPrice(item.subtotal)}</td>
                                 </tr>
                             );
@@ -103,20 +104,25 @@ const InvoiceA4 = forwardRef(
 
                 {/* FOOTER */}
                 <div className="relative mt-auto pt-3 border-t text-right pr-2 text-[16px]">
-                    <div>
-                        <p>
-                            Subtotal: $
-                            {orderResponse?.subTotal ? formatPrice(orderResponse.subTotal) : "0.00"}
-                        </p>
-                        <p>
-                            Descuento: $
-                            {orderResponse?.totalDiscount ? formatPrice(orderResponse.totalDiscount) : "0.00"}
-                            {console.log(orderResponse?.totalDiscount)}
-                        </p>
+                    <div className="flex  justify-between items-center">
+                        <div>
 
-                        <p className="text-[18px] font-bold">
-                            TOTAL: $ {orderResponse ? formatPrice(totalFinal) : "0.00"}
-                        </p>
+                        </div>
+                        <div >
+                            <p>
+                                Subtotal: $
+                                {orderResponse?.subTotal ? formatPrice(orderResponse.subTotal) : "0.00"}
+                            </p>
+                            <p>
+                                Descuento: $
+                                {orderResponse?.totalDiscount ? formatPrice(orderResponse.totalDiscount) : "0.00"}
+
+                            </p>
+
+                            <p className="text-[18px] font-bold">
+                                TOTAL: $ {orderResponse ? formatPrice(totalFinal) : "0.00"}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

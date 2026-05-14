@@ -79,7 +79,7 @@ const SalesDashboard = () => {
                                     <tr key={idx}>
                                         <td className="border-b px-3 py-2">{p.productName}</td>
                                         <td className="border-b px-3 py-2">{p.quantity}</td>
-                                        <td className="border-b px-3 py-2">${Math.round((Number(p.salePrice) || 0) * (Number(p.quantity) || 0))}</td>
+                                        <td className="border-b px-3 py-2">${Math.round((Number(p.finalPrice) || 0) * (Number(p.quantity) || 0))}</td>
                                     </tr>
                                 ))}
                             </tbody>
