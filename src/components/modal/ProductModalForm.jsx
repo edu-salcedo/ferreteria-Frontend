@@ -98,16 +98,17 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
     if (!show) return null; // No renderizar si no debe mostrarse
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center p-3 justify-center">
+            <div className="bg-white w-full max-w-150 rounded-2xl shadow-xl  max-h-[90vh] flex flex-col overflow-hidden">
+
                 {/* Header */}
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">{product ? "Editando producto" : "Nuevo producto"}</h2>
-                    <button onClick={onHide} className="text-gray-500 text-3xl hover:text-gray-700 ">&times;</button>
+                <div className="flex justify-between items-center mb-4 ">
+                    <h2 className="text-xl font-semibold m-auto">{product ? "Editando producto" : "Nuevo producto"}</h2>
+                    <button onClick={onHide} className="text-gray-500 text-3xl hover:text-gray-700  pe-5">&times;</button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto p-6">
 
                     {/* Nombre */}
                     <div>

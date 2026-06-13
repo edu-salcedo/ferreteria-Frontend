@@ -26,7 +26,7 @@ const Header = () => {
                         <Link to="/productos" className="text-gray-700 hover:text-orange-600">Productos</Link>
                         <Link to="/upload" className="text-gray-700 hover:text-orange-600">Subir archivo</Link>
                         <Link to="/checkout" className="text-gray-700 hover:text-orange-600">checkout</Link>
-                        <Link to="/ventas" className="text-gray-700 hover:text-orange-600">Ventas</Link>
+                        <Link to="/dashboard" className="text-gray-700 hover:text-orange-600">Dashboard</Link>
                     </div>
 
                     {/* Mobile menu button */}

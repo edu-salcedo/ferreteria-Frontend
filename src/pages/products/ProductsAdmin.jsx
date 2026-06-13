@@ -6,6 +6,7 @@ import ProductList from "./ProductList";
 import ProductModalForm from "../../components/modal/ProductModalForm";
 import Pagination from "../../components/iu/Pagination";
 import { useApi } from "../../hooks/useApi";
+import Sidebar from "../../components/Dashboard/Sidebar";
 
 const ProductsAdmin = () => {
     const navigate = useNavigate();
@@ -47,8 +48,6 @@ const ProductsAdmin = () => {
 
     };
 
-
-
     const params = useMemo(
         () => new URLSearchParams(location.search),
         [location.search]
@@ -56,10 +55,7 @@ const ProductsAdmin = () => {
     const searchTerm = params.get("search") || "";
     const categoryId = params.get("category");
     const currentPage = Number(params.get("page")) || 1;
-    const selectedCategory = categoryId
-        ? { id: Number(categoryId) }
-        : null;
-
+    const selectedCategory = categoryId ? { id: Number(categoryId) } : null;
 
     const updateParams = (updates) => {
         const newParams = new URLSearchParams(location.search);
@@ -93,25 +89,25 @@ const ProductsAdmin = () => {
     return (
         <>
 
-            <ProductModalForm show={showModalForm} onHide={() => setShowModalForm(false)} product={updateProduct} onSave={handleSave} />
+            <ProductModalForm
+                show={showModalForm}
+                onHide={() => setShowModalForm(false)}
+                product={updateProduct} onSave={handleSave}
+            />
             <div className="grid grid-cols-12 gap-4 mt-2">
-                <div className="col-span-2 min-h-screen ">
+                <div className="col-span-3 min-h-screen ">
                     <div className="sticky top-4">
-
                         <CategoryDropdown
                             mode="list"
                             selected={selectedCategory}
                             onSelect={(cat) =>
-                                updateParams({
-                                    category: cat?.id ?? null,
-                                    page: 1,
-                                })
+                                updateParams({ category: cat?.id ?? null, page: 1, })
                             }
-
                         />
+                        <Sidebar />
                     </div>
                 </div>
-                <div className="col-span-10">
+                <div className="col-span-9">
 
                     <div className="flex flex-col md:flex-row items-center mt-5 px-4">
                         <div className="w-full md:w-1/3 mb-4 md:mb-0">

@@ -1,6 +1,7 @@
 import { useCart } from "../../context/CartContext";
 import { useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
+import bodyLogo from "../../assets/img/bud.png";
 import { toast } from "react-toastify";
 import axios from "axios";
 
@@ -13,7 +14,7 @@ const Checkout = () => {
     const [loading, setLoading] = useState(false);
     const [discount, setDiscount] = useState(0);
     const [mode, setMode] = useState("budget"); // EFECTIVO | TARJETA 
-    const [paymentMethod, setPaymentMethod] = useState("EFECTIVO"); // EFECTIVO | TARJETA
+    const [paymentMethod, setPaymentMethod] = useState(""); // EFECTIVO | TARJETA
     const printRef = useRef(null);
 
     const totalAmount = cart.reduce(
@@ -30,6 +31,10 @@ const Checkout = () => {
     const handleAction = async (type) => {
         if (cart.length === 0) {
             toast.error("El carrito está vacío");
+            return;
+        }
+        if (!paymentMethod) {
+            toast.error("Selecciona un método de pago");
             return;
         }
 
@@ -102,8 +107,6 @@ const Checkout = () => {
             <div className="flex justify-center gap-6 mb-6">
                 <h1 className="text-3xl font-bold mb-6">Checkout</h1>
             </div>
-
-
             {cart.length === 0 && !orderResponse && <p>Tu carrito está vacío</p>}
 
             {cart.length > 0 && (
@@ -142,34 +145,41 @@ const Checkout = () => {
                                 <select
                                     value={paymentMethod}
                                     onChange={e => setPaymentMethod(e.target.value)}
-                                    className="border rounded px-2 py-1"
+                                    className={` border rounded px-3 py-2 ${!paymentMethod ? "text-gray-400" : "text-black"}`}
                                 >
+                                    <option value="">
+                                        Seleccionar método de pago
+                                    </option>
                                     <option value="EFECTIVO">Efectivo</option>
                                     <option value="TARJETA">Tarjeta (+10%)</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                    <option value="DEbITO">Debito</option>
                                 </select>
                             </div>
                         </div>
 
                         {/* Totales */}
-                        <div className="flex flex-col gap-1 ml-4">
-                            <h2 className="text-gray-800">Total lista: ${Math.floor(totalAmount)}</h2>
-                            {surCharge > 0 && (
-                                <h2 className="text-gray-800">Recargo ({surCharge}%): ${Math.floor(totalWithAdd)}</h2>
-                            )}
-                            {discount > 0 && (
-                                <h2 className="text-gray-800">Descuento ({discount}%): ${Math.floor(totalWithDiscount)}</h2>
-                            )}
-                            <h2 className="text-2xl font-bold">Total final: ${Math.floor(totalWithDiscount)}</h2>
+                        <div className="flex flex-col gap-1 ml-4 p-4 rounded">
+                            <div className="">
+                                <h2 className="text-gray-800">Total lista: ${Math.floor(totalAmount)}</h2>
+                                {surCharge > 0 && (
+                                    <h2 className="text-gray-800">Recargo ({surCharge}%): ${Math.floor(totalWithAdd)}</h2>
+                                )}
+                                {discount > 0 && (
+                                    <h2 className="text-gray-800">Descuento ({discount}%): ${Math.floor(totalWithDiscount)}</h2>
+                                )}
+                                <h2 className="text-2xl font-bold">Total final: ${Math.floor(totalWithDiscount)}</h2>
+                                <div>
+                                    <button onClick={() => setIsBudget(prev => !prev)} className="bg-gray-400 rounded px-4 py-2 text-sm text-white">
+                                        {isBudget ? "Cambiar a Venta" : "Cambiar a Presupuesto"}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <button onClick={() => setIsBudget(prev => !prev)} className="bg-gray-400 rounded px-4 py-2 text-sm text-white">
-                                {isBudget ? "Cambiar a Venta" : "Cambiar a Presupuesto"}
-                            </button>
-                        </div>
                     </div>
 
-                    <div className="flex gap-4 bg-red-200 ">
+                    <div className="flex gap-4 justify-center">
                         <button
                             onClick={() => handleAction("budget")}
                             className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold"
@@ -179,8 +189,13 @@ const Checkout = () => {
 
                         <button
                             onClick={() => handleAction("sale")}
-                            disabled={loading}
-                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold"
+                            disabled={loading || !paymentMethod}
+                            className={`px-6 py-3 rounded-lg font-semibold text-white transition
+                                   ${loading || !paymentMethod
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-green-500 hover:bg-green-600"
+                                }
+                                    `}
                         >
                             {loading ? "Procesando..." : "Confirmar compra"}
                         </button>

@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import logo from "../../assets/img/logo.png";
 
 const InvoiceA4 = forwardRef(
     (
@@ -15,6 +16,7 @@ const InvoiceA4 = forwardRef(
             const num = Number(value);
             return isNaN(num) ? 0 : num;
         };
+        const isLargeInvoice = orderResponse?.items?.length > 10;
 
         const now = new Date();
         const date = now.toLocaleDateString("es-AR");
@@ -30,31 +32,38 @@ const InvoiceA4 = forwardRef(
         return (
             <div
                 ref={ref}                                                                      //text-blue-800
-                className="w-[190mm] min-h-[290mm] mx-auto flex flex-col text-[11px] font-sans  text--800 p-4"
+                className={` mx-auto flex flex-col font-sans text-black pt-4
+                         ${isLargeInvoice
+                        ? "w-[180mm] min-h-[290mm] text-[11px] p-4"
+                        : "w-[200mm] min-h-[148mm] text-[9px] p-6"}
+                           `}
             >
                 {/* HEADER */}
-                <div className="flex justify-between border-b-2 mt-4 p-3">
-                    <div>
-                        <h2 className="text-[22px] font-bold">SANITARIO VERS</h2>
-                        <p className="text-[13px]">Materiales y accesorios sanitarios</p>
-                        <p className="text-[13px]">9 de Julio 1615 - San Fernando</p>
-                        <p className="text-[14px]">Tel: 1171124180</p>
+                <div className="flex justify-between border-b-1">
+                    <div className="w-[40%] text-center">
+                        <img src={logo} className="w-40 m-auto" alt="Logo" />
+                        <p className="text-[15px]">9 de Julio 1615 - San Fernando</p>
+                        <p className="text-[15px]">Tel: 1171124180</p>
                     </div>
 
-                    <div className="text-center">
+                    <div className="text-center w-[30%] pt-4">
                         <div className="text-[36px] font-bold w-[60px] h-[50px] flex items-center justify-center border m-auto">
                             X
                         </div>
                         <p className="text-[12px]">
-                            {mode === "budget" ? "documento no válido como factura" : "FACTURA"}
+                            {/* {mode === "budget" ? "documento no válido como factura" : "FACTURA"} */}
+                            documento no válido como factura
                         </p>
                     </div>
 
-                    <div className="text-right">
-                        <p className="font-bold text-[14px]">{mode === "budget" ? "PRESUPUESTO" : "VENTA"}</p>
-                        <p>N°: {orderNumber}</p>
-                        <p>Fecha: {date}</p>
-                        <p>Hora: {time}</p>
+                    <div className="text-center w-[30%] pt-4">
+                        <p className="font-bold text-[18px]">PRESUPUESTO </p>
+                        {/* <p className="font-bold text-[18px]">{mode === "budget" ? "PRESUPUESTO" : "VENTA"}</p> */}
+                        <div className="text-[14px]">
+                            <p>N°: {orderNumber}</p>
+                            <p>Fecha: {date}</p>
+                            <p>Hora: {time}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -63,12 +72,10 @@ const InvoiceA4 = forwardRef(
                     <div>
                         <p><strong>Cliente:</strong> {orderResponse?.customerName || "-"}</p>
                         <p><strong>Domicilio:</strong> {orderResponse?.customerAddress || "-"}</p>
-                        <p><strong>Localidad:</strong> {orderResponse?.customerCity || "-"}</p>
                     </div>
                     <div>
                         <p><strong>DNI/CUIT:</strong> {orderResponse?.customerDni || "-"}</p>
-                        <p><strong>Pago:</strong></p>
-                        <p><strong>Vendedor:</strong> {orderResponse?.seller || "-"}</p>
+                        <p><strong>Pago: CONTADO</strong></p>
                     </div>
                 </div>
 
@@ -113,14 +120,14 @@ const InvoiceA4 = forwardRef(
                                 Subtotal: $
                                 {orderResponse?.subTotal ? formatPrice(orderResponse.subTotal) : "0.00"}
                             </p>
-                            <p>
-                                Descuento: $
-                                {orderResponse?.totalDiscount ? formatPrice(orderResponse.totalDiscount) : "0.00"}
-
-                            </p>
 
                             <p className="text-[18px] font-bold">
                                 TOTAL: $ {orderResponse ? formatPrice(totalFinal) : "0.00"}
+                            </p>
+                            <p>
+                                .
+                                {/* {orderResponse?.totalDiscount ? formatPrice(orderResponse.totalDiscount) : "0.00"} */}
+
                             </p>
                         </div>
                     </div>
