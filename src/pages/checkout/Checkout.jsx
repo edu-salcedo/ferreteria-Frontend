@@ -4,12 +4,14 @@ import { useReactToPrint } from "react-to-print";
 import bodyLogo from "../../assets/img/bud.png";
 import { toast } from "react-toastify";
 import axios from "axios";
+import Modal from "../../components/modal/ConfirmModal";
 
 import InvoiceA4 from "../../components/invoice/InvoiceA4";
 
 const Checkout = () => {
     const [isBudget, setIsBudget] = useState(false);
     const { cart, clearCart } = useCart();
+    const [showModal, setShowModal] = useState(false);
     const [orderResponse, setOrderResponse] = useState(null);
     const [loading, setLoading] = useState(false);
     const [discount, setDiscount] = useState(0);
@@ -37,7 +39,6 @@ const Checkout = () => {
             toast.error("Selecciona un método de pago");
             return;
         }
-
         // Mapear items válidos
         const filteredItems = cart
             .filter(item => item.id && item.quantity > 0)
@@ -72,10 +73,14 @@ const Checkout = () => {
                 console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
                 res = await axios.post("http://localhost:8080/order", payload);
+                console.log("POST OK");
+                console.log("Respuesta:", res);
                 toast.success("Compra realizada con éxito");
                 clearCart();
             }
 
+            console.log("Antes de setOrderResponse");
+            console.log(res);
             // Guardamos la respuesta para mostrar factura/presupuesto
             setOrderResponse(res.data);
 
@@ -123,8 +128,8 @@ const Checkout = () => {
                     </ul>
 
                     {/* Controles */}
-                    <div className="flex flex-wrap gap-6 mb-4">
-                        <div className="flex flex-col gap-2 bg-red-200 p-4 rounded">
+                    <div className="flex flex gap-6 mb-4  h-40">
+                        <div className="flex flex-col gap-2 p-4 rounded bg-gray-200">
                             {/* Descuento */}
                             <div className="flex items-center gap-2">
                                 <p>Descuento</p>
@@ -157,72 +162,82 @@ const Checkout = () => {
                                 </select>
                             </div>
                         </div>
-
-                        {/* Totales */}
-                        <div className="flex flex-col gap-1 ml-4 p-4 rounded">
-                            <div className="">
-                                <h2 className="text-gray-800">Total lista: ${Math.floor(totalAmount)}</h2>
-                                {surCharge > 0 && (
-                                    <h2 className="text-gray-800">Recargo ({surCharge}%): ${Math.floor(totalWithAdd)}</h2>
-                                )}
-                                {discount > 0 && (
-                                    <h2 className="text-gray-800">Descuento ({discount}%): ${Math.floor(totalWithDiscount)}</h2>
-                                )}
-                                <h2 className="text-2xl font-bold">Total final: ${Math.floor(totalWithDiscount)}</h2>
-                                <div>
-                                    <button onClick={() => setIsBudget(prev => !prev)} className="bg-gray-400 rounded px-4 py-2 text-sm text-white">
-                                        {isBudget ? "Cambiar a Venta" : "Cambiar a Presupuesto"}
-                                    </button>
+                        <div className="flex gap-2 items-center bg-blue-200">
+                            <div>
+                                {/* Totales */}
+                                <div className="flex flex-col gap-1 ml-4  rounded">
+                                    <div className="">
+                                        <h2 className="text-gray-800">Total lista: ${Math.floor(totalAmount)}</h2>
+                                        {surCharge > 0 && (
+                                            <h2 className="text-gray-800">Recargo ({surCharge}%): ${Math.floor(totalWithAdd)}</h2>
+                                        )}
+                                        {discount > 0 && (
+                                            <h2 className="text-gray-800">Descuento ({discount}%): ${Math.floor(totalWithDiscount)}</h2>
+                                        )}
+                                        <h2 className="text-2xl font-bold">Total final: ${Math.floor(totalWithDiscount)}</h2>
+                                    </div>
                                 </div>
+                                {/* boton para generar presupuesto */}
+                                <button
+                                    onClick={() => handleAction("budget")}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold"
+                                >
+                                    Generar presupuesto
+                                </button>
                             </div>
+                            {/* boton imagen para presupuesto */}
+                            <button
+                                onClick={() => setIsBudget(prev => !prev)}
+                                className="border-none bg-transparent cursor-pointer"
+                            >
+                                <img
+                                    src={bodyLogo}
+                                    alt="Cambiar modo"
+                                    className={`w-24 transition-all duration-300 ${isBudget
+                                        ? "grayscale-0"
+                                        : "grayscale opacity-50"
+                                        }`}
+                                />
+                            </button>
                         </div>
+                    </div>
 
+                    <div>           {/* Confirmación y Print */}
+                        {orderResponse && (
+                            <div className="mt-6 border-2 border-blue-200 bg-blue-50 p-6 rounded-lg text-center">
+                                <h2 className="text-2xl font-bold mb-2 text-blue-800">
+                                    {mode === "sale" ? "¡Compra confirmada!" : "Presupuesto generado"}
+                                </h2>
+                                <button
+                                    onClick={handlePrint}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+                                >
+                                    🖨️ Imprimir presupuesto
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-4 justify-center">
-                        <button
-                            onClick={() => handleAction("budget")}
-                            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold"
-                        >
-                            Generar presupuesto
-                        </button>
-
-                        <button
-                            onClick={() => handleAction("sale")}
-                            disabled={loading || !paymentMethod}
-                            className={`px-6 py-3 rounded-lg font-semibold text-white transition
+                        <div className="flex items-center">
+                            <button
+                                onClick={() => setShowModal(true)}
+                                disabled={loading || !paymentMethod}
+                                className={`px-6 py-3 rounded-lg font-semibold text-white transition
                                    ${loading || !paymentMethod
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-green-500 hover:bg-green-600"
-                                }
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-green-500 hover:bg-green-600"
+                                    }
                                     `}
-                        >
-                            {loading ? "Procesando..." : "Confirmar compra"}
-                        </button>
+                            >
+                                {loading ? "Procesando..." : "Confirmar compra"}
+                            </button>
+
+                        </div>
+
                     </div>
                 </div>
             )}
-
-            {/* Confirmación y Print */}
-            {orderResponse && (
-                <div className="mt-6 border-2 border-blue-200 bg-blue-50 p-6 rounded-lg text-center">
-                    <h2 className="text-2xl font-bold mb-2 text-blue-800">
-                        {mode === "sale" ? "¡Compra confirmada!" : "Presupuesto generado"}
-                    </h2>
-
-                    <p className="mb-4">
-                        {mode === "sale"
-                            ? "La venta se registró correctamente."
-                            : "Este documento no tiene validez fiscal."}
-                    </p>                    <button
-                        onClick={handlePrint}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
-                    >
-                        🖨️ Imprimir presupuesto
-                    </button>
-                </div>
-            )}
-
             {orderResponse && (
                 <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
                     <InvoiceA4
@@ -235,6 +250,19 @@ const Checkout = () => {
                     />
                 </div>
             )}
+
+            <Modal
+                isOpen={showModal}
+                title="Confirmar venta"
+                message="¿Desea registrar esta venta?"
+                confirmText="Sí, vender"
+                cancelText="Cancelar"
+                onCancel={() => setShowModal(false)}
+                onConfirm={() => {
+                    setShowModal(false);
+                    handleAction("sale");
+                }}
+            />
         </div>
     );
 };

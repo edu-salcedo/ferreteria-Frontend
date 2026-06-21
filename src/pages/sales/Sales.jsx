@@ -1,5 +1,6 @@
 import { use, useMemo, useState } from "react";
 
+
 import axios from "axios";
 
 import { Search, } from "lucide-react";
@@ -9,16 +10,31 @@ import { useSalesAnalytics } from "../../hooks/useSalesAnalytics";
 import { useApi } from "../../hooks/useApi";
 import SalesTable from "../../components/Dashboard/SalesTable";
 import OrderModal from "../../components/modal/OrderModal";
+import StatsCard from "../../components/Dashboard/StatsCard";
+import { TrendingUp, DollarSign } from "lucide-react";
 
 const Sales = () => {
 
     const { data: orders, loading, error } = useApi("/order");
     const [search, setSearch] = useState("");
     const [editingOrder, setEditingOrder] = useState(null);
-    const [filter, setFilter] = useState("all");
-    const { filteredOrders } = useSalesAnalytics(orders, filter);
+    const [filter, setFilter] = useState("today");
+    const { filteredOrders, totalSales, totalCosts, totalProfit } = useSalesAnalytics(orders, filter);
     const [showModal, setShowModal] = useState(false);
     const { data: products } = useApi("/products");
+
+
+    const formatCurrency = (value) => {
+
+        return new Intl.NumberFormat(
+            "es-AR",
+            {
+                style: "currency",
+                currency: "ARS",
+                maximumFractionDigits: 0,
+            }
+        ).format(value || 0);
+    };
 
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm("¿Eliminar esta venta?");
@@ -148,6 +164,7 @@ const Sales = () => {
                                 className="border rounded-lg px-4 py-2"
                             >
                                 <option value="today">Hoy </option>
+                                <option value="week">Esta Semana</option>
                                 <option value="month">Este Mes</option>
                                 <option value="year">Este Año</option>
                                 <option value="all">Todo</option>
@@ -156,6 +173,27 @@ const Sales = () => {
                         </div>
                     </div>
 
+
+                </div>
+
+                <div className="flex justify-around">
+                    <StatsCard
+                        title="Ventas"
+                        value={formatCurrency(totalSales)}
+                        icon={<TrendingUp />}
+                    />
+
+                    <StatsCard
+                        title="Costos"
+                        value={formatCurrency(totalCosts)}
+                        icon={<DollarSign />}
+                    />
+
+                    <StatsCard
+                        title="Ganancias"
+                        value={formatCurrency(totalProfit)}
+                        icon={<DollarSign />}
+                    />
 
                 </div>
                 {/* TABLA */}

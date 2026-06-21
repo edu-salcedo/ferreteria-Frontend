@@ -20,7 +20,6 @@ import { Download, TrendingUp, ShoppingCart, Package, DollarSign, } from "lucide
 
 import Sidebar from "../../components/Dashboard/Sidebar";
 import StatsCard from "../../components/Dashboard/StatsCard";
-import SalesTable from "../../components/Dashboard/SalesTable";
 import ExportExcel from "../../components/Dashboard/utils/ExportExcel";
 import { useSalesAnalytics } from "../../hooks/useSalesAnalytics";
 
@@ -38,8 +37,7 @@ const COLORS = [
 const SalesDashboard = () => {
 
     const { data: orders, loading, error } = useApi("/order");
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [filter, setFilter] = useState("month");
+    const [filter, setFilter] = useState("today");
     const { filteredOrders, totalSales,
         totalCosts, totalProfit, profitMargin,
         totalOrders, totalProducts, averageSale,

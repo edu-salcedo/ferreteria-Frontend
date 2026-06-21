@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/',
+    baseURL: 'http://192.168.0.25:8080',
     timeout: 10000,
 });
 

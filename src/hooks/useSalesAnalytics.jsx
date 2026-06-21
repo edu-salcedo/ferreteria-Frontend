@@ -27,8 +27,7 @@ export const useSalesAnalytics = (orders, filter) => {
 
         return orders.filter((order) => {
 
-            const date =
-                new Date(order.createdAt);
+            const date = new Date(order.createdAt);
 
             if (filter === "today") {
 
@@ -36,6 +35,23 @@ export const useSalesAnalytics = (orders, filter) => {
                     order.createdAt?.split("T")[0]
                     === currentDate
                 );
+            }
+
+            if (filter === "week") {
+                // 1. Obtener el inicio de la semana actual (Lunes)
+                const startOfWeek = new Date();
+                const day = startOfWeek.getDay();
+                // Ajuste para que la semana empiece el Lunes (si es Domingo, restamos 6)
+                const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+                startOfWeek.setDate(diff);
+                startOfWeek.setHours(0, 0, 0, 0); // Ir al inicio del Lunes
+                // 2. Obtener el fin de la semana actual (Domingo a última hora)
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                endOfWeek.setHours(23, 59, 59, 999); // Ir al final del Domingo
+
+                // 3. Verificar si la fecha de la orden está dentro del rango
+                return date >= startOfWeek && date <= endOfWeek;
             }
 
             if (filter === "month") {
