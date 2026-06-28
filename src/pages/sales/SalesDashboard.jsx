@@ -93,6 +93,7 @@ const SalesDashboard = () => {
                             className="border rounded-lg px-4 py-2"
                         >
                             <option value="today">Hoy </option>
+                            <option value="week">Esta Semana</option>
                             <option value="month">Este Mes</option>
                             <option value="year">Este Año</option>
                             <option value="all">Todo</option>
@@ -156,85 +157,81 @@ const SalesDashboard = () => {
                 </div>
 
                 {/* GRAFICOS */}
-                <div className="grid lg:grid-cols-2 gap-8">
 
-                    {/* GRAFICO FINANCIERO */}
-                    <div className="bg-white rounded-2xl shadow p-6">
+                {/* GRAFICO FINANCIERO VENTAS COSTOS Y GANANCIA*/}
+                <div className="bg-white rounded-2xl shadow p-6">
 
-                        <h2 className="text-xl font-bold mb-5">
-                            Ventas vs Costos
-                        </h2>
+                    <h2 className="text-xl font-bold mb-5">
+                        Ventas vs Costos
+                    </h2>
 
-                        <div className="h-[350px]">
+                    <div className="h-[350px]">
 
-                            <ResponsiveContainer width="100%" height="100%" >
+                        <ResponsiveContainer width="100%" height="100%" >
 
-                                <LineChart data={salesByDay} >
+                            <LineChart data={salesByDay} >
 
-                                    <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3" />
 
-                                    <XAxis dataKey="date" />
+                                <XAxis dataKey="date" /> <YAxis />
 
-                                    <YAxis />
+                                <Tooltip />
 
-                                    <Tooltip />
+                                <Legend />
 
-                                    <Legend />
+                                <Line
+                                    type="monotone"
+                                    dataKey="sales"
+                                    stroke="#3B82F6"
+                                    strokeWidth={3}
+                                    name="Ventas"
+                                />
 
-                                    <Line
-                                        type="monotone"
-                                        dataKey="sales"
-                                        stroke="#3B82F6"
-                                        strokeWidth={3}
-                                        name="Ventas"
-                                    />
+                                <Line
+                                    type="monotone"
+                                    dataKey="costs"
+                                    stroke="#EF4444"
+                                    strokeWidth={3}
+                                    name="Costos"
+                                />
 
-                                    <Line
-                                        type="monotone"
-                                        dataKey="costs"
-                                        stroke="#EF4444"
-                                        strokeWidth={3}
-                                        name="Costos"
-                                    />
+                                <Line
+                                    type="monotone"
+                                    dataKey="profit"
+                                    stroke="#10B981"
+                                    strokeWidth={3}
+                                    name="Ganancia"
+                                />
 
-                                    <Line
-                                        type="monotone"
-                                        dataKey="profit"
-                                        stroke="#10B981"
-                                        strokeWidth={3}
-                                        name="Ganancia"
-                                    />
+                            </LineChart>
 
-                                </LineChart>
+                        </ResponsiveContainer>
 
-                            </ResponsiveContainer>
-
-                        </div>
                     </div>
+                </div>
 
-                    {/* PRODUCTOS */}
-                    <div className="bg-white rounded-2xl shadow p-6">
+                {/* PRODUCTOS  MAS VENDIDOS*/}
+                <div className="bg-white rounded-2xl shadow p-6">
 
-                        <h2 className="text-xl font-bold mb-5">
-                            Productos Más Vendidos
-                        </h2>
+                    <h2 className="text-xl font-bold mb-5">
+                        Productos Más Vendidos
+                    </h2>
 
-                        <div className="h-[350px]">
+                    <div className="h-[350px]">
 
-                            <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%">
 
-                                <BarChart data={topProducts} >
+                            <BarChart data={topProducts} >
 
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="quantity" fill="#10B981" radius={[8, 8, 0, 0,]} />
-                                </BarChart>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="quantity" fill="#10B981" radius={[8, 8, 0, 0,]} />
+                            </BarChart>
 
-                            </ResponsiveContainer>
+                        </ResponsiveContainer>
 
-                        </div>
                     </div>
                 </div>
 

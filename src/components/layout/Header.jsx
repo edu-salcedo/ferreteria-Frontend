@@ -75,7 +75,8 @@ const Header = () => {
                 {/* Enlaces */}
                 <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-orange-600 transition">Inicio</Link>
                 <Link to="/productos" onClick={() => setIsOpen(false)} className="hover:text-orange-600 transition">Productos</Link>
-                <Link to="/contact" onClick={() => setIsOpen(false)} className="hover:text-orange-600 transition">Contacto</Link>
+                <Link to="/dashboard" onClick={() => setIsOpen(false)} className="hover:text-orange-600 transition">Dashboard</Link>
+                <Link to="/checkout" onClick={() => setIsOpen(false)} className="hover:text-orange-600 transition">Checkout</Link>
             </div>
         </nav>
     );

@@ -1,6 +1,6 @@
-import React from "react";
-import { Link } from "react-router-dom";
 
+import { Link } from "react-router-dom";
+const baseUrl = import.meta.env.VITE_API_URL;
 const ProductCard = ({ product, showModal }) => {
     const { id, img, name, purchasePrice, description, margin, salePrice, stock } = product;
 
@@ -16,7 +16,7 @@ const ProductCard = ({ product, showModal }) => {
             <Link
                 to={`/producto/${id}`} className="w-full h-30 flex items-center justify-center mb-4">
                 <img
-                    src={`http://localhost:8080${img}`}
+                    src={`${baseUrl}${img}`}
                     alt={name}
                     className="max-h-full object-contain"
                 />

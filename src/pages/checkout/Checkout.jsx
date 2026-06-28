@@ -18,7 +18,7 @@ const Checkout = () => {
     const [mode, setMode] = useState("budget"); // EFECTIVO | TARJETA 
     const [paymentMethod, setPaymentMethod] = useState(""); // EFECTIVO | TARJETA
     const printRef = useRef(null);
-
+    const baseUrl = import.meta.env.VITE_API_URL;
     const totalAmount = cart.reduce(
         (sum, item) => sum + item.salePrice * item.quantity,
         0
@@ -67,12 +67,12 @@ const Checkout = () => {
 
             if (type === "budget") {
                 // 👉 Presupuesto: calcula pero no guarda
-                res = await axios.post("http://localhost:8080/order/preview", payload);
+                res = await axios.post(`${baseUrl}/order/preview`, payload);
                 toast.success("Presupuesto generado");
             } else {
                 console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
-                res = await axios.post("http://localhost:8080/order", payload);
+                res = await axios.post(`${baseUrl}/order`, payload);
                 console.log("POST OK");
                 console.log("Respuesta:", res);
                 toast.success("Compra realizada con éxito");
@@ -105,6 +105,7 @@ const Checkout = () => {
 
     const handlePrint = useReactToPrint({
         contentRef: printRef
+
     });
 
     return (
