@@ -68,18 +68,32 @@ const Products = () => {
         Math.ceil(filteredProducts.length / pageSize)
     );
 
-    const handleAddToCart = (product, quantity) => {
-        addToCart(
-            {
-                id: product.id,
-                name: product.name,
-                purchasePrice: product.purchasePrice,
-                salePrice: product.salePrice,
-                img: product.img,
-            },
-            quantity
-        );
-    }
+    const handleAddToCart = (variant, quantity) => {
+        setCart(prev => {
+
+            const exists = prev.find(i => i.variantId === variant.id);
+
+            if (exists) {
+                return prev.map(i =>
+                    i.variantId === variant.id
+                        ? { ...i, quantity: i.quantity + quantity }
+                        : i
+                );
+            }
+
+            return [
+                ...prev,
+                {
+                    variantId: variant.id,
+                    productName: variant.product.name,
+                    measure: variant.measure,
+                    salePrice: variant.salePrice,
+                    quantity,
+                    img: variant.product.img
+                }
+            ];
+        });
+    };
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);

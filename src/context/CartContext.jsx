@@ -15,22 +15,32 @@ const CartProvider = ({ children }) => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (product, quantity) => {
-        const existing = cart.find(p => p.id === product.id);
+    const addToCart = (variant, quantity) => {
 
-        if (existing) {
-            setCart(prev =>
-                prev.map(p =>
-                    p.id === product.id
-                        ? { ...p, quantity: p.quantity + quantity }
-                        : p
-                )
-            );
-            toast.info(`Se actualizó la cantidad de ${product.name} en el carrito`);
-        } else {
-            setCart(prev => [...prev, { ...product, quantity }]);
-            toast.success(`${product.name} agregado al carrito`);
-        }
+        setCart(prev => {
+
+            const exists = prev.find(i => i.variantId === variant.id);
+
+            if (exists) {
+                return prev.map(i =>
+                    i.variantId === variant.id
+                        ? { ...i, quantity: i.quantity + quantity }
+                        : i
+                );
+            }
+
+            return [
+                ...prev,
+                {
+                    variantId: variant.id,
+                    productName: variant.product.name,
+                    measure: variant.measure,
+                    salePrice: variant.salePrice,
+                    quantity,
+                    img: variant.product.img
+                }
+            ];
+        });
     };
 
     const removeFromCart = (id) => {
