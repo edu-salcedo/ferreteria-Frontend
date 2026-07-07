@@ -83,7 +83,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
                                 {/* Código y Medida */}
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-gray-900 truncate">
-                                        {v.sku || "MEDIDA"} <span className="ml-2 font-normal text-gray-600">{v.measure}</span>
+                                        {v.sku || ""} <span className="ml-2 font-normal text-gray-600">{v.measure}</span>
                                     </p>
                                     <p className="text-[11px] text-gray-400">Stock disponible: {v.stock}</p>
                                 </div>
