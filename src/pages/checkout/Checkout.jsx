@@ -8,6 +8,7 @@ import Modal from "../../components/modal/ConfirmModal";
 
 import InvoiceA4 from "../../components/invoice/InvoiceA4";
 
+const baseUrl = import.meta.env.VITE_API_URL;
 const Checkout = () => {
     const [isBudget, setIsBudget] = useState(false);
     const { cart, clearCart } = useCart();
@@ -15,10 +16,11 @@ const Checkout = () => {
     const [orderResponse, setOrderResponse] = useState(null);
     const [loading, setLoading] = useState(false);
     const [discount, setDiscount] = useState(0);
+    const [isInvoice, setIsInvoice] = useState(false);
     const [mode, setMode] = useState("budget"); // EFECTIVO | TARJETA 
     const [paymentMethod, setPaymentMethod] = useState(""); // EFECTIVO | TARJETA
     const printRef = useRef(null);
-    const baseUrl = import.meta.env.VITE_API_URL;
+
     const totalAmount = cart.reduce(
         (sum, item) => sum + item.salePrice * item.quantity,
         0
@@ -39,31 +41,29 @@ const Checkout = () => {
             toast.error("Selecciona un método de pago");
             return;
         }
-        // Mapear items válidos
-        const filteredItems = cart
-            .filter(item => item.id && item.quantity > 0)
-            .map(item => ({
-                productId: Number(item.id),
-                quantity: Number(item.quantity)
-            }));
 
-        if (filteredItems.length === 0) {
+        if (cart.length === 0) {
             toast.error("No hay items válidos");
             return;
         }
 
         setMode(type); // Presupuesto o venta
         setLoading(true);
-        console.log(type);
         try {
-            // Preparar payload
             const payload = {
-                items: filteredItems,
-                paymentMethod: paymentMethod.toUpperCase(), // EFECTIVO o TARJETA
-                discount: Number(discount) || 0
+                paymentMethod,
+                discount,
+                surcharge: surCharge,
+                totalAmount: totalWithDiscount,
+                invoice: isInvoice, // Agregamos el campo isInvoice al payload
+                items: cart.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    quantity: item.quantity
+                }))
             };
-
             let res;
+            console.log("Payload enviado al backend:", payload);
 
             if (type === "budget") {
                 // 👉 Presupuesto: calcula pero no guarda
@@ -73,14 +73,9 @@ const Checkout = () => {
                 console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
                 res = await axios.post(`${baseUrl}/order`, payload);
-                console.log("POST OK");
-                console.log("Respuesta:", res);
                 toast.success("Compra realizada con éxito");
                 clearCart();
             }
-
-            console.log("Antes de setOrderResponse");
-            console.log(res);
             // Guardamos la respuesta para mostrar factura/presupuesto
             setOrderResponse(res.data);
 
@@ -119,8 +114,12 @@ const Checkout = () => {
                 <div className="bg-white shadow-md rounded-lg p-6 mb-6">
                     <ul className="mb-4 divide-y">
                         {cart.map(item => (
-                            <li key={item.id} className="py-2 flex justify-between">
-                                <span>{item.quantity} x {item.name}</span>
+                            <li key={item.variantId} className="py-2 flex justify-between">
+                                <div className="flex gap-4 items-center">
+                                    <p>{item.quantity} x </p>
+                                    <p>{item.productName}</p>
+                                    <small>{item.measure}</small>
+                                </div>
                                 <span className="font-mono">
                                     ${Math.floor(item.quantity * item.salePrice)}
                                 </span>
@@ -132,19 +131,38 @@ const Checkout = () => {
                     <div className="flex flex gap-6 mb-4  h-40">
                         <div className="flex flex-col gap-2 p-4 rounded bg-gray-200">
                             {/* Descuento */}
-                            <div className="flex items-center gap-2">
-                                <p>Descuento</p>
-                                <button
-                                    onClick={() => setDiscount(prev => Math.max(0, prev - 1))}
-                                    className="bg-gray-400 px-2 rounded"
-                                >-</button>
-                                <span>{discount} %</span>
-                                <button
-                                    onClick={() => setDiscount(prev => Math.min(100, prev + 1))}
-                                    className="bg-green-400 px-2 rounded"
-                                >+</button>
-                            </div>
 
+                            <div className="flex gap-4 justify-between">
+                                <div className="flex items-center gap-2">
+                                    <p>Descuento</p>
+                                    <button
+                                        onClick={() => setDiscount(prev => Math.max(0, prev - 1))}
+                                        className="bg-gray-400 px-2 rounded"
+                                    >-</button>
+
+                                    <span>{discount} %</span>
+                                    <button
+                                        onClick={() => setDiscount(prev => Math.min(100, prev + 1))}
+                                        className="bg-green-400 px-2 rounded"
+                                    >+</button>
+                                </div>
+                                <div className="flex items-center gap-3 select-none">
+                                    <label
+                                        htmlFor="isInvoiceCheckbox"
+                                        className="text-sm font-medium text-gray-700 cursor-pointer hover:text-gray-900"
+                                    >
+                                        Facturado
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        id="isInvoiceCheckbox"
+                                        checked={isInvoice}
+                                        onChange={() => setIsInvoice(prev => !prev)}
+                                        className="w-5 h-5 accent-blue-600 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                    />
+                                </div>
+
+                            </div>
                             {/* Medio de pago */}
                             <div className="flex items-center gap-2">
                                 <p>Medio de pago</p>

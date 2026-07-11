@@ -57,24 +57,15 @@ const SalesDashboard = () => {
         ).format(value || 0);
     };
 
-    if (loading) {
+    if (loading) { return (<div className="p-10 text-xl"> Cargando dashboard...</div>); }
 
-        return (<div className="p-10 text-xl"> Cargando dashboard...</div>);
-    }
-
-    if (error) {
-
-        return (<div className="p-10 text-red-500">{error} </div>);
-    }
+    if (error) { return (<div className="p-10 text-red-500">{error} </div>); }
 
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-
-            {/* SIDEBAR */}
             <Sidebar />
 
-            {/* MAIN */}
             <main className="flex-1 p-8 space-y-8">
 
                 {/* HEADER */}
@@ -155,9 +146,6 @@ const SalesDashboard = () => {
                     />
 
                 </div>
-
-                {/* GRAFICOS */}
-
                 {/* GRAFICO FINANCIERO VENTAS COSTOS Y GANANCIA*/}
                 <div className="bg-white rounded-2xl shadow p-6">
 

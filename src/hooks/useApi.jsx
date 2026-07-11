@@ -7,7 +7,8 @@ const api = axios.create({
 });
 
 export function useApi(url, options = {}, autoFetch = true) {
-    const [data, setData] = useState(null);
+    // 1. SOLUCIÓN: Cambiar null por [] evita los errores de lectura de .filter()
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(autoFetch);
     const [error, setError] = useState(null);
 
@@ -17,7 +18,8 @@ export function useApi(url, options = {}, autoFetch = true) {
         setError(null);
         try {
             const response = await api.get(url, options);
-            setData(response.data);
+            // Aseguramos que si la API responde algo vacío, guarde un arreglo
+            setData(response.data || []);
         } catch (err) {
             setError(err.message || 'Error al cargar datos');
         } finally {
@@ -31,49 +33,42 @@ export function useApi(url, options = {}, autoFetch = true) {
 
 
     // CREATE
-    // CREATE
     const create = useCallback(async (formData, config = {}) => {
-        setLoading(true);
+        // Quitamos el setLoading(true) global de aquí para que el botón de "Cargando..."
+        // general de la lista no oculte tus productos mientras creas uno nuevo.
         try {
             const response = await api.post(url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                ...config, // 👈 permite onUploadProgress
+                ...config,
             });
             return response.data;
         } catch (err) {
             throw err;
-        } finally {
-            setLoading(false);
         }
     }, [url]);
 
 
     // UPDATE
     const update = useCallback(async (id, formData) => {
-        setLoading(true);
         try {
             const response = await api.put(`${url}/${id}`, formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
-
             return response.data;
         } catch (err) {
-            console.log(err.response.data);
+            console.log(err.response?.data);
             throw err;
-        } finally {
-            setLoading(false);
         }
     }, [url]);
 
 
     // DELETE
     const remove = useCallback(async (id) => {
-        setLoading(true);
         try {
             await api.delete(`${url}/${id}`, options);
             return true;
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            throw err;
         }
     }, [url, options]);
 

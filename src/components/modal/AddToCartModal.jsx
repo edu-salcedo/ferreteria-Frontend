@@ -31,7 +31,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
         Object.entries(quantities).forEach(([variantId, qty]) => {
             if (qty > 0) {
                 const variant = product.variants.find((v) => v.id === Number(variantId));
-                if (variant) onAddToCart(variant, qty);
+                if (variant) onAddToCart(variant, qty, product);
             }
         });
         setQuantities({});

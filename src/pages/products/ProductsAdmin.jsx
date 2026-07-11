@@ -1,133 +1,238 @@
-import { useMemo, useEffect, useState } from "react";
-import { useNavigate, useLocation, useMatch } from 'react-router-dom';
+import { useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+
+import { useApi } from "../../hooks/useApi";
+
+import Sidebar from "../../components/Dashboard/Sidebar";
 import SearchBar from "../../components/iu/SearchBar";
 import CategoryDropdown from "../../components/iu/CategoryDropdown";
+import Pagination from "../../components/iu/Pagination";
+
 import ProductList from "./ProductList";
 import ProductModalForm from "../../components/modal/ProductModalForm";
-import Pagination from "../../components/iu/Pagination";
-import { useApi } from "../../hooks/useApi";
-import Sidebar from "../../components/Dashboard/Sidebar";
+import ExcelUploaderModal from "../../components/modal/ExcelUploaderModal";
+import ExportProductExcel from "../../components/product/ExportProductExcel";
+
+import { Download } from "lucide-react";
+const PAGE_SIZE = 20;
 
 const ProductsAdmin = () => {
+
     const navigate = useNavigate();
     const location = useLocation();
-    const [updateProduct, setUpdateProduct] = useState(null);
-    const [showModalForm, setShowModalForm] = useState(false);
 
-    const pageSize = 20;
+    const [showModal, setShowModal] = useState(false);
+    const [showExcel, setShowExcel] = useState(false);
 
-    const { data: productList, loading, error, refetch, create, update } = useApi('products');
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const handleCreate = () => {
-        setUpdateProduct(null);
+    const {
+        data: products = [],
+        loading,
+        error,
+        create,
+        update,
+        refetch
+    } = useApi("products");
 
-        setShowModalForm(true);
-    };
-
-    const handleUpdate = (product) => {
-        setUpdateProduct(product);
-        setShowModalForm(true);
-    };
-
-    const handleSave = async (action, savedProduct) => {
-        try {
-
-            if (action === "update") {
-                await update(savedProduct.id, savedProduct);
-            }
-            if (action === "create") {
-                await create(savedProduct);
-            }
-        } catch (err) {
-            console.error("Error al guardar producto:", err);
-        }
-        finally {
-            setShowModalForm(false);
-            refetch(); // recargar lista luego de guardar
-        }
-
-    };
+    //-------------------------------------------------
 
     const params = useMemo(
         () => new URLSearchParams(location.search),
         [location.search]
     );
-    const searchTerm = params.get("search") || "";
-    const categoryId = params.get("category");
+
+    const search = params.get("search") || "";
+
+    const category = params.get("category");
+
     const currentPage = Number(params.get("page")) || 1;
-    const selectedCategory = categoryId ? { id: Number(categoryId) } : null;
+
+    //-------------------------------------------------
 
     const updateParams = (updates) => {
-        const newParams = new URLSearchParams(location.search);
 
-        Object.entries(updates).forEach(([key, value]) => {
-            if (value === null || value === "" || value === undefined) {
-                newParams.delete(key);
+        const p = new URLSearchParams(location.search);
+
+        Object.entries(updates).forEach(([k, v]) => {
+
+            if (v === null || v === "" || v === undefined) {
+                p.delete(k);
             } else {
-                newParams.set(key, value);
+                p.set(k, v);
             }
-        });
 
-        navigate({ search: newParams.toString() });
+        });
+        navigate({ search: p.toString() });
     };
 
+    const filtered = products.filter(p => {
+        // Solución 1: Evita que la app muera si p.name no existe
+        const productName = p.name || "";
 
-    // Filtrar productos según búsqueda y categoría seleccionada
-    const filteredProducts = (productList ?? []).filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory ? Number(product.categoryId) === selectedCategory.id : true;
-        return matchesSearch && matchesCategory;
+        const matchSearch =
+            productName.toLowerCase().includes(
+                search.toLowerCase()
+            );
+
+        const matchCategory =
+            category ? Number(p.categoryId) === Number(category) : true;
+
+        return matchSearch && matchCategory;
     });
 
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
 
-    // --- Calcular paginación ---
-    const totalPages = Math.ceil(filteredProducts.length / pageSize);
-    const startIndex = (currentPage - 1) * pageSize;
-    const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+    const safePage = currentPage > totalPages ? 1 : currentPage;
 
+    const paginated =
+        filtered.slice(
+            (safePage - 1) * PAGE_SIZE,
+            safePage * PAGE_SIZE
+        );
+    const handleCreate = () => {
 
+        setSelectedProduct(null);
+        setShowModal(true);
+    };
+
+    const handleEdit = (product) => {
+
+        setSelectedProduct(product);
+        setShowModal(true);
+    };
+
+    const handleSave = async (action, dto) => {
+        try {
+            // 1. Detectamos de forma segura si es edición o creación
+            const productId = selectedProduct?.id || dto?.id;
+            const isEditing = !!productId;
+
+            // 2. Preparamos los datos. Tu hook useApi usa 'multipart/form-data'.
+            // Si el modal te envía un FormData, lo usamos directamente.
+            // Si te envía un objeto común (JSON), lo convertimos automáticamente a FormData.
+            let dataToSend;
+            if (dto instanceof FormData) {
+                dataToSend = dto;
+            } else {
+                dataToSend = new FormData();
+                Object.entries(dto).forEach(([key, value]) => {
+                    // Evitamos enviar valores nulos o undefined vacíos
+                    if (value !== null && value !== undefined) {
+                        dataToSend.append(key, value);
+                    }
+                });
+            }
+
+            // 3. Ejecutamos la acción correspondiente en la API
+            if (isEditing) {
+                // Al editar, tu hook hace: api.put(`${url}/${id}`, formData)
+                await update(productId, dataToSend);
+            } else {
+                // Al crear, tu hook hace: api.post(url, formData)
+                await create(dataToSend);
+            }
+
+            // 4. Refrescamos la lista de la tabla y cerramos el modal
+            refetch();
+            setShowModal(false);
+
+        } catch (e) {
+            console.error("Error crítico al procesar handleSave:", e);
+            // Opcional: Aquí podrías setear un estado de error local para mostrar una alerta al usuario
+        }
+    };
+
+    //-------------------------------------------------
     return (
         <>
-
             <ProductModalForm
-                show={showModalForm}
-                onHide={() => setShowModalForm(false)}
-                product={updateProduct} onSave={handleSave}
+                show={showModal}
+                product={selectedProduct}
+                onHide={() => setShowModal(false)}
+                onSave={handleSave}
             />
-            <div className="grid grid-cols-12 gap-4 mt-2">
-                <div className="col-span-3 min-h-screen ">
+            <ExcelUploaderModal
+                show={showExcel}
+                onHide={() => setShowExcel(false)}
+                onImported={() => {
+                    refetch();
+                    setShowExcel(false);
+                }}
+            />
+            <div className="grid grid-cols-12 gap-5">
+                <div className="col-span-3">
                     <div className="sticky top-4">
                         <CategoryDropdown
                             mode="list"
-                            selected={selectedCategory}
+                            selected={category ? { id: Number(category) } : null}
                             onSelect={(cat) =>
-                                updateParams({ category: cat?.id ?? null, page: 1, })
+                                updateParams({
+                                    category: cat?.id,
+                                    page: 1
+                                })
                             }
                         />
                         <Sidebar />
                     </div>
                 </div>
                 <div className="col-span-9">
+                    <div className="bg-white rounded-xl shadow p-5">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-3xl font-bold">
+                                Productos
+                            </h1>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowExcel(true)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded"
+                                >
+                                    Importar Excel
+                                </button>
 
-                    <div className="flex flex-col md:flex-row items-center mt-5 px-4">
-                        <div className="w-full md:w-1/3 mb-4 md:mb-0">
+                                <button
+                                    onClick={() => ExportProductExcel(filtered)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                                >
+                                    <Download size={18} />
 
-                            <SearchBar value={searchTerm} onInputChange={(value) => updateParams({ search: value, page: 1 })} />
+                                    Excel
+                                </button>
+
+                                <button
+                                    onClick={handleCreate}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded"
+                                >
+                                    Nuevo Producto
+                                </button>
+                            </div>
                         </div>
-
-                        <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded ml-6">
-                            Agregar Producto
-                        </button>
-
+                        <SearchBar
+                            value={search}
+                            onInputChange={(v) =>
+                                updateParams({ search: v, page: 1 })
+                            }
+                        />
+                        <div className="mt-5">
+                            {
+                                loading ? <p>Cargando...</p>
+                                    :
+                                    error ? <p>Error</p>
+                                        :
+                                        <ProductList
+                                            products={paginated}
+                                            handleUpdate={handleEdit}
+                                        />
+                            }
+                        </div>
                     </div>
-                    {loading && <p>Cargando productos...</p>}
-                    {error && <p>Error al cargar productos: {error.message}</p>}
-                    <ProductList products={paginatedProducts} handleUpdate={handleUpdate} />
                 </div>
-
             </div>
-
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => updateParams({ page })} />
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => updateParams({ page })}
+            />
         </>
     );
 };

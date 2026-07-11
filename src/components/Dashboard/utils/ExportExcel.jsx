@@ -20,13 +20,14 @@ const ExportExcel = (orders) => {
 
                     "Fecha": new Date(order.createdAt).toLocaleString(),
                     "Orden": order.id,
-                    "Producto": item.productName,
+                    "Producto": item.productName + " - " + item.measure,
                     "Cantidad": quantity,
                     "Precio Compra": basePrice,
                     "Compra*cant": basePrice * quantity,
                     "Precio Venta": finalPrice,
                     "Venta total": total,
-                    "Ganancia": order.paymentMethod,
+                    "metodopago": order.paymentMethod,
+                    "venta total": order.totalAmount,
                 });
             }
         );
@@ -39,6 +40,7 @@ const ExportExcel = (orders) => {
         { wch: 10 },
         { wch: 30 },
         { wch: 12 },
+        { wch: 15 },
         { wch: 15 },
         { wch: 15 },
         { wch: 15 },

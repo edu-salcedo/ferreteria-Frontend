@@ -13,10 +13,8 @@ const Products = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const pageSize = 12;
-
     const [showModal, setShowModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-
     const { data: productList, loading } = useApi("products");
     const products = Array.isArray(productList) ? productList : [];
 
@@ -68,31 +66,8 @@ const Products = () => {
         Math.ceil(filteredProducts.length / pageSize)
     );
 
-    const handleAddToCart = (variant, quantity) => {
-        setCart(prev => {
-
-            const exists = prev.find(i => i.variantId === variant.id);
-
-            if (exists) {
-                return prev.map(i =>
-                    i.variantId === variant.id
-                        ? { ...i, quantity: i.quantity + quantity }
-                        : i
-                );
-            }
-
-            return [
-                ...prev,
-                {
-                    variantId: variant.id,
-                    productName: variant.product.name,
-                    measure: variant.measure,
-                    salePrice: variant.salePrice,
-                    quantity,
-                    img: variant.product.img
-                }
-            ];
-        });
+    const handleAddToCart = (variant, quantity, product) => {
+        addToCart(variant, quantity, product);
     };
 
     const handleOpenModal = (product) => {

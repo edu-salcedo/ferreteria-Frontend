@@ -15,7 +15,7 @@ const CartProvider = ({ children }) => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (variant, quantity) => {
+    const addToCart = (variant, quantity, product) => {
 
         setCart(prev => {
 
@@ -33,37 +33,40 @@ const CartProvider = ({ children }) => {
                 ...prev,
                 {
                     variantId: variant.id,
-                    productName: variant.product.name,
+                    productId: product.id,
+                    productName: product.name,
                     measure: variant.measure,
                     salePrice: variant.salePrice,
+                    purchasePrice: variant.purchasePrice,
                     quantity,
-                    img: variant.product.img
+                    img: product.img,
+                    stock: variant.stock
                 }
             ];
         });
     };
 
-    const removeFromCart = (id) => {
-        const item = cart.find(p => p.id === id);
-        setCart(prev => prev.filter(p => p.id !== id));
-        if (item) toast.success(`${item.name} eliminado del carrito`);
+    const removeFromCart = (variantId) => {
+        const item = cart.find(p => p.variantId === variantId);
+        setCart(prev => prev.filter(p => p.variantId !== variantId));
+        if (item) toast.success(`${item.productName} eliminado del carrito`);
     };
 
-    const increaseQuantity = (id) => {
+    const increaseQuantity = (variantId) => {
         setCart(cart =>
             cart.map(item =>
-                item.id === id
+                item.variantId === variantId
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             )
         );
     };
 
-    const decreaseQuantity = (id) => {
+    const decreaseQuantity = (variantId) => {
         setCart(cart =>
             cart
                 .map(item =>
-                    item.id === id
+                    item.variantId === variantId
                         ? { ...item, quantity: item.quantity - 1 }
                         : item
                 )
