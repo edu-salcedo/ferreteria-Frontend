@@ -77,6 +77,7 @@ const SalesTable = ({ orders, EditingOrder, deleteOrder, }) => {
                                     <td className="p-4"> {order.items?.length || 0}</td>
                                     <td className="p-4"> {order.paymentMethod || "-"}</td>
                                     <td className="p-4"> {order.invoice ? "Sí" : "No"}</td>
+
                                     <td className="p-4">
                                         <div className="flex gap-2">
                                             {/* VER */}
@@ -149,34 +150,20 @@ const SalesTable = ({ orders, EditingOrder, deleteOrder, }) => {
 
                                                             {order.items?.map((item, idx) => {
                                                                 const subtotal = Number(item.finalPrice) * Number(item.quantity);
-                                                                const profit = (Number(item.finalPrice) - Number(item.basePrice)) * Number(item.quantity);
+                                                                const profit = (Number(item.finalPrice) - Number(item.purchasePrice)) * Number(item.quantity);
                                                                 return (
 
                                                                     <tr key={idx} className="border-t hover:bg-gray-50">
 
                                                                         <td className="p-4 font-medium">{item.productName}-{item.measure} </td>
-
-                                                                        {/* CANTIDAD */}
                                                                         <td className="p-4"> {item.quantity} </td>
-
-                                                                        {/* PRECIO COMPRA */}
-                                                                        <td className="p-4"> {formatCurrency(item.basePrice)} </td>
-
-                                                                        {/* PRECIO VENTA */}
+                                                                        <td className="p-4"> {formatCurrency(item.purchasePrice)} </td>
                                                                         <td className="p-4"> {formatCurrency(item.finalPrice)}</td>
-
-                                                                        {/* SUBTOTAL */}
                                                                         <td className="p-4 font-semibold text-blue-600">
-
                                                                             {formatCurrency(subtotal)}
-
                                                                         </td>
-
-                                                                        {/* GANANCIA */}
                                                                         <td className="p-4 font-bold text-green-600">
-
                                                                             {formatCurrency(profit)}
-
                                                                         </td>
                                                                     </tr>
                                                                 );

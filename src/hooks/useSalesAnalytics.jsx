@@ -72,13 +72,7 @@ export const useSalesAnalytics = (orders, filter) => {
             return true;
         });
 
-    }, [
-        orders,
-        filter,
-        currentDate,
-        currentMonth,
-        currentYear,
-    ]);
+    }, [orders, filter, currentDate, currentMonth, currentYear,]);
 
     // =====================================================
     // TOTAL VENTAS
@@ -110,7 +104,7 @@ export const useSalesAnalytics = (orders, filter) => {
                             return (
                                 sum +
                                 (
-                                    Number(item.basePrice || 0) *
+                                    Number(item.purchasePrice || 0) *
                                     Number(item.quantity || 0)
                                 )
                             );
@@ -184,10 +178,7 @@ export const useSalesAnalytics = (orders, filter) => {
     // PROMEDIO
     // =====================================================
 
-    const averageSale =
-        totalOrders > 0
-            ? totalSales / totalOrders
-            : 0;
+    const averageSale = totalOrders > 0 ? totalSales / totalOrders : 0;
 
     // =====================================================
     // VENTAS POR DIA
@@ -204,11 +195,7 @@ export const useSalesAnalytics = (orders, filter) => {
 
             if (!grouped[date]) {
 
-                grouped[date] = {
-                    sales: 0,
-                    costs: 0,
-                    profit: 0,
-                };
+                grouped[date] = { sales: 0, costs: 0, profit: 0, };
             }
 
             grouped[date].sales +=
@@ -218,7 +205,7 @@ export const useSalesAnalytics = (orders, filter) => {
 
                 grouped[date].costs +=
                     (
-                        Number(item.basePrice || 0) *
+                        Number(item.purchasePrice || 0) *
                         Number(item.quantity || 0)
                     );
             });
@@ -254,8 +241,7 @@ export const useSalesAnalytics = (orders, filter) => {
                     grouped[item.productName] = 0;
                 }
 
-                grouped[item.productName] +=
-                    Number(item.quantity || 0);
+                grouped[item.productName] += Number(item.quantity || 0);
             });
         });
 
@@ -264,9 +250,7 @@ export const useSalesAnalytics = (orders, filter) => {
                 name,
                 quantity,
             }))
-            .sort((a, b) =>
-                b.quantity - a.quantity
-            )
+            .sort((a, b) => b.quantity - a.quantity)
             .slice(0, 5);
 
     }, [filteredOrders]);
@@ -286,7 +270,7 @@ export const useSalesAnalytics = (orders, filter) => {
                 const profit =
                     (
                         Number(item.finalPrice || 0) -
-                        Number(item.basePrice || 0)
+                        Number(item.purchasePrice || 0)
                     ) *
                     Number(item.quantity || 0);
 

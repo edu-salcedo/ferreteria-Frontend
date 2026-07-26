@@ -67,7 +67,7 @@ const Cart = () => {
                         </p>
 
                         <button
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.variantId)}
                             className="text-red-500 hover:underline ml-4"
                         >
                             Eliminar

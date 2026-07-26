@@ -1,62 +1,269 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useApi } from "../../hooks/useApi";
 import axios from "axios";
+const ExcelUploader = () => {
 
-const PdfUploader = () => {
     const [file, setFile] = useState(null);
+    const [dragActive, setDragActive] = useState(false);
+    const [progress, setProgress] = useState(0);
     const [message, setMessage] = useState("");
+    const [processing, setProcessing] = useState(false);
+    const [result, setResult] = useState(null);
+    const inputRef = useRef(null);
 
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+    const { create, loading } = useApi("sales/import", {}, false);
+
+    // ==========================
+    // DRAG
+
+    const handleDrag = (e) => {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else {
+            setDragActive(false);
+        }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
 
+    const handleDrop = (e) => {
+
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+
+        const selected = e.dataTransfer.files?.[0];
+
+        if (selected) { selectFile(selected); }
+    };
+
+
+    const handleChange = (e) => {
+
+        const selected = e.target.files?.[0];
+
+        if (selected) { selectFile(selected); }
+    };
+
+
+    const selectFile = (file) => {
+
+        setFile(file);
+        setMessage("");
+        setResult(null);
+        setProgress(0);
+
+    };
+    // ==========================
+    // SUBIR EXCEL
+    // ==========================
+    const handleUpload = async () => {
         if (!file) {
-            setMessage("Por favor selecciona un archivo PDF");
+            setMessage("Seleccione un archivo Excel");
             return;
         }
+        setProgress(0);
+        setProcessing(true);
+        setMessage("Procesando archivo...");
+        setResult(null);
 
         const formData = new FormData();
-        formData.append("file", file); // "file" debe coincidir con @RequestPart en Spring
+
+        formData.append("file", file);
 
         try {
-            const response = await axios.post(
-                "http://localhost:8080/products/upload-pdf", // tu endpoint
+            const response = await create(
                 formData,
                 {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    onUploadProgress: (event) => {
+
+                        if (event.total) {
+                            const percent =
+                                Math.round(
+                                    event.loaded * 100 / event.total
+                                );
+                            setProgress(percent);
+                        }
+                    }
                 }
             );
-            setMessage(response.data);
+
+            setResult(response);
+            console.log(response);
+            setMessage("Archivo importado correctamente");
+
+
         } catch (error) {
-            console.error(error);
-            setMessage("Error al subir el PDF");
+
+            console.log(error);
+            setMessage("Error procesando archivo");
+
         }
+        finally { setProcessing(false); }
+
+    };
+
+    // ==========================
+    // LIMPIAR
+
+    const clearFile = () => {
+
+        setFile(null);
+        setProgress(0);
+        setMessage("");
+        setResult(null);
+
+        if (inputRef.current) { inputRef.current.value = ""; }
+
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded">
-            <h2 className="text-lg font-semibold mb-4">Subir PDF de productos</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div className=" max-w-lg mx-auto mt-10 bg-white shadow-lg rounded-lgp-6 ">
+
+            <h2 className=" text-2xl font-bold mb-5 text-gray-800">
+                Importar ventas Excel
+            </h2>
+            {/* DROP AREA */}
+
+            <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+
+                onClick={() => inputRef.current.click()}
+
+                className={`
+                       h-44
+                       border-2
+                       border-dashed
+                       rounded-lg
+                       flex
+                       flex-col
+                       justify-center
+                       items-center
+                       cursor-pointer
+                       transition
+   
+                       ${dragActive
+                        ?
+                        "border-blue-500 bg-blue-50"
+                        :
+                        "border-gray-400 bg-gray-50"
+                    }
+   
+                   `}
+            >
                 <input
+                    ref={inputRef}
                     type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                    className="block w-full border rounded px-3 py-2"
+                    accept=".xlsx,.xls "
+                    onChange={handleChange}
+                    className="hidden"
                 />
-                <button
-                    type="submit"
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                >
-                    Subir PDF
-                </button>
-            </form>
-            {message && <p className="mt-4 text-center">{message}</p>}
+
+                {!file ? <>
+
+                    <span className="text-5xl"> 📤 </span>
+
+                    <p className="text-gray-600"> Arrastre el Excel aquí </p>
+
+                    <p className="text-xs text-gray-400"> o haga click </p>
+                </>
+                    :
+                    <>
+                        <span className="text-5xl"> 📊 </span>
+                        <p className="font-medium text-gray-800 ">
+                            {file.name}
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+
+                            {(file.size / 1024).toFixed(2)} KB
+                        </p>
+
+                        <button onClick={(e) => { e.stopPropagation(); clearFile(); }}
+
+                            className=" mt-3 text-blue-600 text-sm "
+                        >
+                            Cambiar archivo
+                        </button>
+                    </>
+                }
+            </div>
+
+            {/* BOTON */}
+
+            <button
+
+                onClick={handleUpload}
+
+                disabled={loading || processing}
+
+                className="
+                       mt-5
+                       w-full
+                       bg-blue-600
+                       hover:bg-blue-700
+                       text-white
+                       py-2
+                       rounded
+                       disabled:opacity-50
+                   "
+
+            >
+
+                {processing ? "Procesando..." : "Importar Excel"}
+
+            </button>
+
+            {/* PROGRESO */}
+
+            <div className=" mt-5 h-4 bg-gray-200 rounded overflow-hidden">
+
+                <div className="h-full bg-green-500 transition-all "
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
+
+            {
+                processing &&
+
+                <p className="text-center text-blue-600 mt-2 animate-pulse">
+
+                    Guardando ventas...
+                </p>
+            }
+
+            {/* MENSAJE */}
+
+            {
+                message &&
+
+                <p className=" text-center mt-4font-medium">
+
+                    {message}
+                </p>
+
+            }
+
+            {/* RESULTADO IMPORTACION */}
+
+            {
+                result &&
+
+                <div className=" mt-6 bg-gray-100 rounded p-4text-sm ">
+
+                    <h3 className="font-bold mb-3"> Resultado: </h3>
+
+                    <p>📂 Ventas nuevas: {" "} {result.newOrders}</p>
+                </div>
+            }
         </div>
     );
-}
-
-export default PdfUploader;
+};
+export default ExcelUploader;

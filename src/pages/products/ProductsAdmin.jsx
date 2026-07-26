@@ -77,7 +77,6 @@ const ProductsAdmin = () => {
 
         const matchCategory =
             category ? Number(p.categoryId) === Number(category) : true;
-
         return matchSearch && matchCategory;
     });
 
@@ -142,7 +141,6 @@ const ProductsAdmin = () => {
             // Opcional: Aquí podrías setear un estado de error local para mostrar una alerta al usuario
         }
     };
-
     //-------------------------------------------------
     return (
         <>
@@ -214,16 +212,18 @@ const ProductsAdmin = () => {
                             }
                         />
                         <div className="mt-5">
-                            {
-                                loading ? <p>Cargando...</p>
-                                    :
-                                    error ? <p>Error</p>
-                                        :
-                                        <ProductList
-                                            products={paginated}
-                                            handleUpdate={handleEdit}
-                                        />
-                            }
+                            {loading && <p>Cargando...</p>}
+
+                            {error && (
+                                <div>
+                                    {error.response?.data?.message || error.message || String(error)}
+                                </div>
+                            )}
+                            <ProductList
+                                products={paginated}
+                                handleUpdate={handleEdit}
+                            />
+
                         </div>
                     </div>
                 </div>
