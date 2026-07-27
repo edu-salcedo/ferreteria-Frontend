@@ -98,7 +98,12 @@ const InvoiceA4 = forwardRef(
                                 <tr key={i}>
 
                                     <td className="pl-3">{item.quantity}</td>
-                                    <td className="p-1">{item.productName + "-" + item.measure || "Producto"}</td>
+                                    <td className="p-1"><h3 className="font-semibold">
+                                        {item.measure?.toUpperCase() === "UNICO"
+                                            ? item.productName
+                                            : `${item.productName} - ${item.measure}`
+                                        }
+                                    </h3></td>
                                     <td className="p-1">$ {formatPrice(item.unitPrice)}</td>
                                     <td className="p-1">{item.discountApplied > 0 ? `${item.discountApplied}%` : "-"}</td>
                                     <td className="p-1">{isBudget ? "$" + formatPrice(item.finalPrice) : ""}</td>

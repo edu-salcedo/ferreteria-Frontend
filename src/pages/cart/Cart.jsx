@@ -41,7 +41,12 @@ const Cart = () => {
                         />
 
                         <div className="flex-1">
-                            <h3 className="font-semibold">{item.productName} - {item.measure}</h3>
+                            <h3 className="font-semibold">
+                                {item.measure?.toUpperCase() === "UNICO"
+                                    ? item.productName
+                                    : `${item.productName} - ${item.measure}`
+                                }
+                            </h3>
                             {/* Mostramos el precio unitario con el 40% ya sumado */}
                             <p className="text-sm text-gray-400">
                                 Costo base: ${Math.round(item.purchasePrice)} | Precio venta: ${Math.round(item.salePrice)}

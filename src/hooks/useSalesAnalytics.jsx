@@ -121,32 +121,13 @@ export const useSalesAnalytics = (orders, filter) => {
 
     }, [filteredOrders]);
 
-    // =====================================================
     // GANANCIAS
-    // =====================================================
+    const totalProfit = totalSales - totalCosts;
 
-    const totalProfit =
-        totalSales - totalCosts;
-
-    // =====================================================
     // MARGEN
-    // =====================================================
+    const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100: 0;
 
-    const profitMargin =
-        totalSales > 0
-            ? (totalProfit / totalSales) * 100
-            : 0;
-
-    // =====================================================
-    // TOTAL ORDENES
-    // =====================================================
-
-    const totalOrders =
-        filteredOrders.length;
-
-    // =====================================================
-    // PRODUCTOS
-    // =====================================================
+    const totalOrders = filteredOrders.length;
 
     const totalProducts = useMemo(() => {
 
@@ -158,13 +139,9 @@ export const useSalesAnalytics = (orders, filter) => {
                     (order.items || []).reduce(
                         (sum, item) => {
 
-                            return (
-                                sum +
-                                Number(item.quantity || 0)
-                            );
+                            return ( sum +Number(item.quantity || 0));
 
-                        },
-                        0
+                        }, 0
                     )
                 );
 
@@ -174,15 +151,7 @@ export const useSalesAnalytics = (orders, filter) => {
 
     }, [filteredOrders]);
 
-    // =====================================================
-    // PROMEDIO
-    // =====================================================
-
     const averageSale = totalOrders > 0 ? totalSales / totalOrders : 0;
-
-    // =====================================================
-    // VENTAS POR DIA
-    // =====================================================
 
     const salesByDay = useMemo(() => {
 

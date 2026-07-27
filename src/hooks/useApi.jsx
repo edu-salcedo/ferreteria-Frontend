@@ -7,19 +7,20 @@ const api = axios.create({
 });
 
 export function useApi(url, options = {}, autoFetch = true) {
-    // 1. SOLUCIÓN: Cambiar null por [] evita los errores de lectura de .filter()
-    const [data, setData] = useState([]);
+    // 🚀 CAMBIO 1: Inicializamos con null para que pueda soportar tanto Arrays [] como Objetos {}
+    const [data, setData] = useState(null);
     const [loading, setLoading] = useState(autoFetch);
     const [error, setError] = useState(null);
 
-    // FETCH
+    // FETCH 
     const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const response = await api.get(url, options);
-            // Aseguramos que si la API responde algo vacío, guarde un arreglo
-            setData(response.data || []);
+
+            // 🚀 CAMBIO 2: Si response.data no existe, por defecto asignamos un array vacío
+            setData(response.data ?? []);
         } catch (err) {
             setError(err.message || 'Error al cargar datos');
         } finally {
@@ -31,11 +32,8 @@ export function useApi(url, options = {}, autoFetch = true) {
         if (autoFetch) fetchData();
     }, [fetchData, autoFetch]);
 
-
-    // CREATE
+    // CREATE 
     const create = useCallback(async (formData, config = {}) => {
-        // Quitamos el setLoading(true) global de aquí para que el botón de "Cargando..."
-        // general de la lista no oculte tus productos mientras creas uno nuevo.
         try {
             const response = await api.post(url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -47,8 +45,7 @@ export function useApi(url, options = {}, autoFetch = true) {
         }
     }, [url]);
 
-
-    // UPDATE
+    // UPDATE 
     const update = useCallback(async (id, formData) => {
         try {
             const response = await api.put(`${url}/${id}`, formData, {
@@ -61,8 +58,7 @@ export function useApi(url, options = {}, autoFetch = true) {
         }
     }, [url]);
 
-
-    // DELETE
+    // DELETE 
     const remove = useCallback(async (id) => {
         try {
             await api.delete(`${url}/${id}`, options);

@@ -46,7 +46,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
             <div className="bg-white w-full max-w-xl p-5 rounded-lg shadow-xl relative text-gray-800 flex items-center gap-6">
 
                 {/* 1. Columna Izquierda: Imagen y nombre del producto */}
-                <div className="flex flex-col items-center justify-center bg-blue-200 p-2 rounded">
+                <div className="flex flex-col items-center justify-center p-2 rounded">
                     <div className="w-44 text-center">
                         <div className="flex justify-center mb-4">
                             <img src={`${baseUrl}${product.img}`} className="w-44 h-44 object-contain" alt={product.name} />
@@ -73,7 +73,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
                     </button>
 
                     {/* Lista de Variantes e Selectores */}
-                    <div className="divide-y divide-gray-100 mb-5 bg-green-200 p-2 rounded">
+                    <div className="divide-y divide-gray-100 mb-5 p-2 rounded">
                         {product.variants.map((v) => {
                             const currentQty = quantities[v.id] || 0;
                             return (
@@ -105,7 +105,7 @@ const AddToCartModal = ({ product, isOpen, onClose, onAddToCart }) => {
 
                     {/* Botón de Confirmación Inferior */}
                     <button disabled={!hasItemsSelected} className={`w-full py-2.5 rounded font-bold text-sm tracking-wide text-white uppercase shadow-sm transition-colors ${hasItemsSelected ? "bg-blue-500 hover:bg-blue-600 cursor-pointer" : "bg-gray-300 cursor-not-allowed"}`} onClick={handleConfirm}>
-                        Confirmar pedido
+                        Agregar Producto
                     </button>
                 </div>
 

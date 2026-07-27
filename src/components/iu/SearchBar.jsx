@@ -7,9 +7,9 @@ export default function SearchBar({ onInputChange }) {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const containerRef = useRef(null);
-    const { data: products = [], loading, error } = useApi("/products", {}, true);
+    const { data: pageData, loading, error } = useApi("/products", {}, true);
 
-
+    const products = pageData?.content || [];
     //para hacer que el scroll siga la selección de la lista con flecha arriba/abajo
     const itemRefs = useRef({});  // 👈 refs por ID, no por índice
 
@@ -29,7 +29,7 @@ export default function SearchBar({ onInputChange }) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const suggestions = (products || []).filter((item) =>
+    const suggestions = products.filter((item) =>
         item.name.toLowerCase().includes(query.toLowerCase())
     );
 
@@ -39,9 +39,7 @@ export default function SearchBar({ onInputChange }) {
             const id = suggestions[highlightIndex].id;
             const el = itemRefs.current[id];
             if (el) {
-                el.scrollIntoView({
-                    block: "nearest",
-                });
+                el.scrollIntoView({ block: "nearest", });
             }
         }
     }, [highlightIndex, suggestions]);

@@ -117,8 +117,12 @@ const Checkout = () => {
                             <li key={item.variantId} className="py-2 flex justify-between">
                                 <div className="flex gap-4 items-center">
                                     <p>{item.quantity} x </p>
-                                    <p>{item.productName}</p>
-                                    <small>{item.measure}</small>
+                                    <h3 className="font-semibold">
+                                        {item.measure?.toUpperCase() === "UNICO"
+                                            ? item.productName
+                                            : `${item.productName} - ${item.measure}`
+                                        }
+                                    </h3>
                                 </div>
                                 <span className="font-mono">
                                     ${Math.floor(item.quantity * item.salePrice)}
