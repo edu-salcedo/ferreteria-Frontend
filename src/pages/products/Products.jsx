@@ -34,15 +34,10 @@ const Products = () => {
         `products?search=${encodeURIComponent(searchTerm)}&categoryId=${categoryId}&page=${currentPage - 1}&size=${pageSize}`
     );
 
-    if (error) {
-        console.error("❌ Error detectado en la petición API:", error);
-    }
-    console.log("📦 Estado actual de pageData:", pageData);
-    // Desestructuramos la respuesta del objeto Page de Spring Boot
     const paginatedProducts = pageData?.content || [];
+
     const totalPages = pageData?.totalPages || 1;
 
-    /* 🔹 3. HELPERS PARA ACTUALIZAR URL */
     const updateParams = (updates) => {
         const newParams = new URLSearchParams(location.search);
         Object.entries(updates).forEach(([key, value]) => {

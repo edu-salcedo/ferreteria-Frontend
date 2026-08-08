@@ -16,16 +16,13 @@ const OrderModal = ({ order, products, show, onHide, onSave }) => {
     }, [order]);
 
     if (!show || !editedOrder) return null;
+    const productList = Array.isArray(products) ? products : (products?.content || []);
 
     // ✨ Extraemos todas las variantes de todos los productos en una lista plana para facilitar la búsqueda
-    const allVariants = products?.reduce((acc, product) => {
+    const allVariants = productList.reduce((acc, product) => {
         if (product.variants && product.variants.length > 0) {
             product.variants.forEach(variant => {
-                acc.push({
-                    ...variant,
-                    parentName: product.name,
-                    productId: product.id
-                });
+                acc.push({ ...variant, parentName: product.name, productId: product.id });
             });
         }
         return acc;

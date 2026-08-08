@@ -190,7 +190,7 @@ const ExcelUploader = () => {
                             {(file.size / 1024).toFixed(2)} KB
                         </p>
 
-                        <button onClick={(e) => {e.stopPropagation();clearFile(); }}
+                        <button onClick={(e) => { e.stopPropagation(); clearFile(); }}
 
                             className=" mt-3 text-blue-600 text-sm "
                         >
@@ -205,20 +205,8 @@ const ExcelUploader = () => {
             <button
 
                 onClick={handleUpload}
-
                 disabled={loading || processing}
-
-                className="
-                    mt-5
-                    w-full
-                    bg-blue-600
-                    hover:bg-blue-700
-                    text-white
-                    py-2
-                    rounded
-                    disabled:opacity-50
-                "
-
+                className="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded disabled:opacity-50"
             >
 
                 {processing ? "Procesando..." : "Importar Excel"}

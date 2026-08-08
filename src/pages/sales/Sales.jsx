@@ -17,7 +17,7 @@ const Sales = () => {
     const [editingOrder, setEditingOrder] = useState(null);
 
     // ✨ SOLUCIÓN 1: Cambiado a "all" por defecto para que muestre el historial completo al cargar
-    const [filter, setFilter] = useState("all");
+    const [filter, setFilter] = useState("today");
 
     const { filteredOrders, totalSales, totalCosts, totalProfit } = useSalesAnalytics(orders, filter);
     const [showModal, setShowModal] = useState(false);

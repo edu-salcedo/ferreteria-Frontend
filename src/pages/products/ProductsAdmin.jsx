@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../hooks/useApi";
 import Sidebar from "../../components/Dashboard/Sidebar";
@@ -21,19 +21,21 @@ const ProductsAdmin = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     /* 🔹 1. DERIVAR ESTADO DESDE LA URL */
-    const params = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search]
-    );
+    const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const search = params.get("search") || "";
     const category = params.get("category") || "";
     const currentPage = Number(params.get("page")) || 1;
 
-    /* 🚀 2. CONSULTA DINÁMICA AL BACKEND (PAGINADA Y FILTRADA) */
-    // Pasamos los query params directo a Spring Boot. Restamos 1 a la página ya que el backend indexa en 0.
-    const { data: pageData, loading, error, create, update, refetch } = useApi(
-        `products?search=${encodeURIComponent(search)}&categoryId=${category}&page=${currentPage - 1}&size=${PAGE_SIZE}`
-    );
+    const { data: pageData, loading, error, create, update, refetch } = useApi("products", {}, false);
+
+    /* 🔄 3. EFECTO PARA TRAER LOS DATOS CADA VEZ QUE CAMBIEN LOS FILTROS O LA PÁGINA */
+    useEffect(() => {
+        const queryUrl = `products?search=${encodeURIComponent(search)}&categoryId=${category}&page=${currentPage - 1}&size=${PAGE_SIZE}`;
+
+        // Le pasamos la URL con filtros directamente al refetch para hacer el GET de forma segura
+        refetch(queryUrl);
+    }, [search, category, currentPage, refetch]);
+
 
     // Extraemos de manera segura los datos estructurales del objeto Page de Spring
     const paginated = pageData?.content || [];
@@ -66,8 +68,8 @@ const ProductsAdmin = () => {
         try {
             const productId = selectedProduct?.id || dto?.id;
             const isEditing = !!productId;
-
             let dataToSend;
+
             if (dto instanceof FormData) {
                 dataToSend = dto;
             } else {
@@ -85,12 +87,16 @@ const ProductsAdmin = () => {
                 await create(dataToSend);
             }
 
-            refetch();
+            // 👇 SOLUCIÓN: Arma la URL exacta con los filtros actuales para que refetch no los borre
+            const queryUrl = `products?search=${encodeURIComponent(search)}&categoryId=${category}&page=${currentPage - 1}&size=${PAGE_SIZE}`;
+            refetch(queryUrl);
+
             setShowModal(false);
         } catch (e) {
             console.error("Error crítico al procesar handleSave:", e);
         }
     };
+
 
     return (
         <>

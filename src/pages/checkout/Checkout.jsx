@@ -31,7 +31,10 @@ const Checkout = () => {
     const surChargeAmount = totalAmount * (surCharge / 100);
     const totalWithAdd = totalAmount + surChargeAmount;
     const totalWithDiscount = totalWithAdd * (1 - discount / 100);
-
+    const rawNumber = orderResponse?.nextOrderNumber || orderResponse?.id || 1;
+    const formattedNumber = rawNumber.toString().padStart(6, "0");
+    const prefix = mode === "sale" ? "Venta" : "Presupuesto";
+    const pdfFileName = `${prefix}_${formattedNumber}`;
     const handleAction = async (type) => {
         if (cart.length === 0) {
             toast.error("El carrito está vacío");
@@ -63,12 +66,21 @@ const Checkout = () => {
                 }))
             };
             let res;
-            console.log("Payload enviado al backend:", payload);
+            let lastOrderId = 0;
 
             if (type === "budget") {
+
+                try {
+                    const lastRes = await axios.get(`${baseUrl}/order/last-id`);
+                    lastOrderId = Number(lastRes.data?.lastId) || 0;
+                } catch (err) {
+                    console.error("Error al leer el last-id", err);
+                }
                 // 👉 Presupuesto: calcula pero no guarda
                 res = await axios.post(`${baseUrl}/order/preview`, payload);
                 toast.success("Presupuesto generado");
+                setOrderResponse({ ...res.data, nextOrderNumber: lastOrderId + 1 });
+                console.log("total orders ", lastOrderId);
             } else {
                 console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
@@ -77,8 +89,7 @@ const Checkout = () => {
                 clearCart();
             }
             // Guardamos la respuesta para mostrar factura/presupuesto
-            setOrderResponse(res.data);
-
+            setOrderResponse({ ...res.data, nextOrderNumber: res.data?.id || (lastOrderId + 1) });
         } catch (err) {
             console.error(err);
 
@@ -98,10 +109,19 @@ const Checkout = () => {
         }
     };
 
-    const handlePrint = useReactToPrint({
-        contentRef: printRef
+    const handlePaymentMethodChange = (e) => {
+        const selectedMethod = e.target.value;
+        setPaymentMethod(selectedMethod);
 
-    });
+        // Si es TRANSFERENCIA, TARJETA o DEBITO, activa el checkbox automáticamente
+        if (selectedMethod === "TRANSFERENCIA" || selectedMethod === "TARJETA" || selectedMethod === "DEBITO") {
+            setIsInvoice(true);
+        } else {
+            setIsInvoice(false); // Opcional: desmarcar si vuelve a Efectivo o vacío
+        }
+    };
+
+    const handlePrint = useReactToPrint({ contentRef: printRef, documentTitle: pdfFileName });
 
     return (
         <div className="max-w-4xl mx-auto mt-10 px-4">
@@ -172,7 +192,7 @@ const Checkout = () => {
                                 <p>Medio de pago</p>
                                 <select
                                     value={paymentMethod}
-                                    onChange={e => setPaymentMethod(e.target.value)}
+                                    onChange={handlePaymentMethodChange}
                                     className={` border rounded px-3 py-2 ${!paymentMethod ? "text-gray-400" : "text-black"}`}
                                 >
                                     <option value="">
@@ -181,7 +201,7 @@ const Checkout = () => {
                                     <option value="EFECTIVO">Efectivo</option>
                                     <option value="TARJETA">Tarjeta (+10%)</option>
                                     <option value="TRANSFERENCIA">Transferencia</option>
-                                    <option value="DEbITO">Debito</option>
+                                    <option value="DEBITO">Debito</option>
                                 </select>
                             </div>
                         </div>

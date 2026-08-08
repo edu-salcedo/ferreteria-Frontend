@@ -2,16 +2,15 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 const ExportExcel = (orders) => {
-
     const data = [];
 
     orders.forEach((order) => {
 
         (order.items || []).forEach(
             (item) => {
-
+                { console.log("ehcbhe" + item); }
                 const quantity = Number(item.quantity || 0);
-                const basePrice = Number(item.basePrice || 0);
+                const basePrice = Number(item.purchasePrice || 0);
                 const finalPrice = Number(item.finalPrice || 0);
                 const total = quantity * finalPrice;
                 const profit = (finalPrice - basePrice) * quantity;

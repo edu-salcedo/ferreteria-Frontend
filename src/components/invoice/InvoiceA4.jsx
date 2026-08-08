@@ -21,8 +21,7 @@ const InvoiceA4 = forwardRef(
         const now = new Date();
         const date = now.toLocaleDateString("es-AR");
         const time = now.toLocaleTimeString("es-AR");
-
-        const orderNumber = orderResponse?.id || Math.floor(Math.random() * 10000);
+        const orderNumber = orderResponse?.nextOrderNumber || orderResponse?.id || 1;
         const totalFinal = safeNumber(orderResponse?.totalAmount);
 
         const formatPrice = (value) => {

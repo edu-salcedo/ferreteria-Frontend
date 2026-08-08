@@ -66,18 +66,30 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
     };
 
     const updateVariant = (index, field, value) => {
+        setVariants(prev => prev.map((v, i) => {
+            if (i !== index) return v; // Si no es la fila editada, la dejamos igual
 
-        const list = [...variants];
+            // Creamos una nueva copia limpia de la variante editada
+            const updatedVariant = { ...v, [field]: value };
 
-        list[index][field] = value;
+            // Si cambió el precio de compra o el margen de ganancia, recalculamos la venta
+            if (field === "purchasePrice" || field === "profitMargin") {
+                const purchase = Number(updatedVariant.purchasePrice) || 0;
+                const margin = Number(updatedVariant.profitMargin) || 0;
 
-        if (field === "purchasePrice" || field === "profitMargin") {
+                // Cálculo base del precio de venta
+                let calculatedSale = purchase + (purchase * margin / 100);
 
-            const purchase = Number(list[index].purchasePrice);
-            const margin = Number(list[index].profitMargin);
-            list[index].salePrice = purchase + purchase * margin / 100;
-        }
-        setVariants(list);
+                // OPCIONAL (Altamente recomendado): Redondeo al techo de múltiplos de 50 idéntico a tu Java
+                if (calculatedSale > 0) {
+                    calculatedSale = Math.ceil(calculatedSale / 50) * 50;
+                }
+
+                updatedVariant.salePrice = calculatedSale;
+            }
+
+            return updatedVariant;
+        }));
     };
 
 
@@ -282,64 +294,40 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                                                 <input
                                                     className="w-full p-2"
                                                     value={variant.measure}
-                                                    onChange={e =>
-                                                        updateVariant(
-                                                            index,
-                                                            "measure",
-                                                            e.target.value
-                                                        )
-                                                    }
+                                                    onChange={e => updateVariant(index, "measure", e.target.value)}
                                                 />
                                             </td>
 
-                                            <td className="border w-[15%]">
-
+                                            <td className="border w-[12%]">
                                                 <input
                                                     type="number"
                                                     className="w-full p-2"
                                                     value={variant.purchasePrice}
-                                                    onChange={e =>
-                                                        updateVariant(
-                                                            index,
-                                                            "purchasePrice",
-                                                            Number(e.target.value)
-                                                        )
-                                                    }
+                                                    onChange={e => updateVariant(index, "purchasePrice", Number(e.target.value))}
                                                 />
                                             </td>
-                                            <td className="border w-[10%]">
+                                            <td className="border w-[15%]">
                                                 <input
                                                     type="number"
                                                     className="w-full p-2"
                                                     value={variant.profitMargin}
                                                     onChange={e =>
-                                                        updateVariant(
-                                                            index,
-                                                            "profitMargin",
-                                                            Number(e.target.value)
-                                                        )
-                                                    }
+                                                        updateVariant(index, "profitMargin", Number(e.target.value))}
                                                 />
                                             </td>
-                                            <td className="border w-[15%]">
+                                            <td className="border w-[20%]">
                                                 <input
                                                     disabled
                                                     className="w-full bg-gray-100 p-2"
-                                                    value={variant.salePrice}
+                                                    value={Number(variant.salePrice).toFixed(2)}
                                                 />
                                             </td>
-                                            <td className="border w-[10%]">
+                                            <td className="border w-[8%]">
                                                 <input
                                                     type="number"
                                                     className="w-full p-2"
                                                     value={variant.stock}
-                                                    onChange={e =>
-                                                        updateVariant(
-                                                            index,
-                                                            "stock",
-                                                            Number(e.target.value)
-                                                        )
-                                                    }
+                                                    onChange={e => updateVariant(index, "stock", Number(e.target.value))}
                                                 />
                                             </td>
 

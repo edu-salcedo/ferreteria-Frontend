@@ -7,27 +7,32 @@ const api = axios.create({
 });
 
 export function useApi(url, options = {}, autoFetch = true) {
-    // 🚀 CAMBIO 1: Inicializamos con null para que pueda soportar tanto Arrays [] como Objetos {}
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(autoFetch);
     const [error, setError] = useState(null);
 
-    // FETCH 
-    const fetchData = useCallback(async () => {
+    // 🚀 Convertimos las opciones a String para romper la recreación de objetos en memoria
+    const serializedOptions = JSON.stringify(options);
+
+    // FETCH / REFETCH UNIFICADO
+    const fetchData = useCallback(async (customUrl) => {
+        const targetUrl = customUrl || url;
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get(url, options);
-
-            // 🚀 CAMBIO 2: Si response.data no existe, por defecto asignamos un array vacío
+            // Parseamos las opciones seguras de vuelta a objeto
+            const apiOptions = JSON.parse(serializedOptions);
+            const response = await api.get(targetUrl, apiOptions);
             setData(response.data ?? []);
         } catch (err) {
             setError(err.message || 'Error al cargar datos');
         } finally {
             setLoading(false);
         }
-    }, [url]);
+        // 🚀 Cambiamos [options] por [serializedOptions] para frenar el bucle infinito
+    }, [url, serializedOptions]);
 
+    // Sincronizamos la carga automática si autoFetch está activo
     useEffect(() => {
         if (autoFetch) fetchData();
     }, [fetchData, autoFetch]);
@@ -68,9 +73,13 @@ export function useApi(url, options = {}, autoFetch = true) {
         }
     }, [url, options]);
 
-    const refetch = useCallback(() => {
-        fetchData();
-    }, [fetchData]);
-
-    return { data, loading, error, refetch, create, update, remove };
+    return {
+        data,
+        loading,
+        error,
+        refetch: fetchData,
+        create,
+        update,
+        remove
+    };
 }
