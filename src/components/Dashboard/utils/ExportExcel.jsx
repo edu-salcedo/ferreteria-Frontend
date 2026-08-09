@@ -2,16 +2,15 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 const ExportExcel = (orders) => {
-
     const data = [];
 
     orders.forEach((order) => {
 
         (order.items || []).forEach(
             (item) => {
-
+                { console.log("ehcbhe" + item); }
                 const quantity = Number(item.quantity || 0);
-                const basePrice = Number(item.basePrice || 0);
+                const basePrice = Number(item.purchasePrice || 0);
                 const finalPrice = Number(item.finalPrice || 0);
                 const total = quantity * finalPrice;
                 const profit = (finalPrice - basePrice) * quantity;
@@ -20,13 +19,14 @@ const ExportExcel = (orders) => {
 
                     "Fecha": new Date(order.createdAt).toLocaleString(),
                     "Orden": order.id,
-                    "Producto": item.productName,
+                    "Producto": item.productName + " - " + item.measure,
                     "Cantidad": quantity,
                     "Precio Compra": basePrice,
                     "Compra*cant": basePrice * quantity,
                     "Precio Venta": finalPrice,
                     "Venta total": total,
-                    "Ganancia": order.paymentMethod,
+                    "metodopago": order.paymentMethod,
+                    "venta total": order.totalAmount,
                 });
             }
         );
@@ -39,6 +39,7 @@ const ExportExcel = (orders) => {
         { wch: 10 },
         { wch: 30 },
         { wch: 12 },
+        { wch: 15 },
         { wch: 15 },
         { wch: 15 },
         { wch: 15 },

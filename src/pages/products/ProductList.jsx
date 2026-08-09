@@ -1,5 +1,5 @@
 import React from 'react';
-
+const baseUrl = import.meta.env.VITE_API_URL;
 const ProductList = ({ products, handleUpdate }) => {
 
     return (
@@ -14,10 +14,7 @@ const ProductList = ({ products, handleUpdate }) => {
                             <th className="px-4 py-2 text-left">Imagen</th>
                             <th className="px-4 py-2 text-left">ID</th>
                             <th className="px-4 py-2 text-left">Nombre</th>
-                            <th className="px-4 py-2 text-left">Costo (Base)</th>
-                            {/* Nueva columna para el precio de venta */}
-                            <th className="px-4 py-2 text-left text-green-600">Precio Venta (+40%)</th>
-                            <th className="px-4 py-2 text-left">Stock</th>
+                            <th className="px-4 py-2 text-left">Variantes</th>
                             <th className="px-4 py-2 text-left">Categoria</th>
                             <th className="px-4 py-2 text-left">Acciones</th>
                         </tr>
@@ -27,7 +24,7 @@ const ProductList = ({ products, handleUpdate }) => {
                             <tr key={p.id} className="border-b hover:bg-gray-50">
                                 <td className="px-4 py-2">
                                     <img
-                                        src={`http://localhost:8080${p.img}`}
+                                        src={baseUrl + p.img}
                                         className="w-16 h-16 object-contain"
                                         alt={p.name}
                                     />
@@ -35,18 +32,7 @@ const ProductList = ({ products, handleUpdate }) => {
 
                                 <td className="px-4 py-2 text-sm text-gray-500">{p.id}</td>
                                 <td className="px-4 py-2 font-medium">{p.name}</td>
-
-                                {/* Precio original */}
-                                <td className="px-4 py-2 text-gray-500">
-                                    ${Number(p.purchasePrice).toLocaleString()}
-                                </td>
-
-                                {/* Precio con ganancia aplicada y redondeado */}
-                                <td className="px-4 py-2 font-bold text-green-600">
-                                    $  {p.salePrice.toLocaleString()}
-                                </td>
-
-                                <td className="px-4 py-2">{p.stock}</td>
+                                <td className="px-4 py-2 font-medium">{p.variants?.length || 0}</td>
                                 <td className="px-4 py-2">{p.categoryName}</td>
 
                                 <td className="px-4 py-2">

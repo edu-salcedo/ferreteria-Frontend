@@ -1,133 +1,177 @@
-import { useMemo, useEffect, useState } from "react";
-import { useNavigate, useLocation, useMatch } from 'react-router-dom';
-import SearchBar from "../../components/iu/SearchBar";
-import CategoryDropdown from "../../components/iu/CategoryDropdown";
-import ProductList from "./ProductList";
-import ProductModalForm from "../../components/modal/ProductModalForm";
-import Pagination from "../../components/iu/Pagination";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../../hooks/useApi";
 import Sidebar from "../../components/Dashboard/Sidebar";
+import SearchBar from "../../components/iu/SearchBar";
+import CategoryDropdown from "../../components/iu/CategoryDropdown";
+import Pagination from "../../components/iu/Pagination";
+import ProductList from "./ProductList";
+import ProductModalForm from "../../components/modal/ProductModalForm";
+import ExcelUploaderModal from "../../components/modal/ExcelUploaderModal";
+import ExportProductExcel from "../../components/product/ExportProductExcel";
+import { Download } from "lucide-react";
+
+const PAGE_SIZE = 20;
 
 const ProductsAdmin = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [updateProduct, setUpdateProduct] = useState(null);
-    const [showModalForm, setShowModalForm] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [showExcel, setShowExcel] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const pageSize = 20;
-
-    const { data: productList, loading, error, refetch, create, update } = useApi('products');
-
-    const handleCreate = () => {
-        setUpdateProduct(null);
-
-        setShowModalForm(true);
-    };
-
-    const handleUpdate = (product) => {
-        setUpdateProduct(product);
-        setShowModalForm(true);
-    };
-
-    const handleSave = async (action, savedProduct) => {
-        try {
-
-            if (action === "update") {
-                await update(savedProduct.id, savedProduct);
-            }
-            if (action === "create") {
-                await create(savedProduct);
-            }
-        } catch (err) {
-            console.error("Error al guardar producto:", err);
-        }
-        finally {
-            setShowModalForm(false);
-            refetch(); // recargar lista luego de guardar
-        }
-
-    };
-
-    const params = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search]
-    );
-    const searchTerm = params.get("search") || "";
-    const categoryId = params.get("category");
+    /* 🔹 1. DERIVAR ESTADO DESDE LA URL */
+    const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const search = params.get("search") || "";
+    const category = params.get("category") || "";
     const currentPage = Number(params.get("page")) || 1;
-    const selectedCategory = categoryId ? { id: Number(categoryId) } : null;
 
+    const { data: pageData, loading, error, create, update, refetch } = useApi("products", {}, false);
+
+    /* 🔄 3. EFECTO PARA TRAER LOS DATOS CADA VEZ QUE CAMBIEN LOS FILTROS O LA PÁGINA */
+    useEffect(() => {
+        const queryUrl = `products?search=${encodeURIComponent(search)}&categoryId=${category}&page=${currentPage - 1}&size=${PAGE_SIZE}`;
+
+        // Le pasamos la URL con filtros directamente al refetch para hacer el GET de forma segura
+        refetch(queryUrl);
+    }, [search, category, currentPage, refetch]);
+
+
+    // Extraemos de manera segura los datos estructurales del objeto Page de Spring
+    const paginated = pageData?.content || [];
+    const totalPages = pageData?.totalPages || 1;
+
+    /* 🔹 3. HELPERS PARA ACTUALIZAR URL */
     const updateParams = (updates) => {
-        const newParams = new URLSearchParams(location.search);
-
-        Object.entries(updates).forEach(([key, value]) => {
-            if (value === null || value === "" || value === undefined) {
-                newParams.delete(key);
+        const p = new URLSearchParams(location.search);
+        Object.entries(updates).forEach(([k, v]) => {
+            if (v === null || v === "" || v === undefined) {
+                p.delete(k);
             } else {
-                newParams.set(key, value);
+                p.set(k, v);
             }
         });
-
-        navigate({ search: newParams.toString() });
+        navigate({ search: p.toString() });
     };
 
+    const handleCreate = () => {
+        setSelectedProduct(null);
+        setShowModal(true);
+    };
 
-    // Filtrar productos según búsqueda y categoría seleccionada
-    const filteredProducts = (productList ?? []).filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory ? Number(product.categoryId) === selectedCategory.id : true;
-        return matchesSearch && matchesCategory;
-    });
+    const handleEdit = (product) => {
+        setSelectedProduct(product);
+        setShowModal(true);
+    };
 
+    const handleSave = async (action, dto) => {
+        try {
+            const productId = selectedProduct?.id || dto?.id;
+            const isEditing = !!productId;
+            let dataToSend;
 
-    // --- Calcular paginación ---
-    const totalPages = Math.ceil(filteredProducts.length / pageSize);
-    const startIndex = (currentPage - 1) * pageSize;
-    const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+            if (dto instanceof FormData) {
+                dataToSend = dto;
+            } else {
+                dataToSend = new FormData();
+                Object.entries(dto).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                        dataToSend.append(key, value);
+                    }
+                });
+            }
+
+            if (isEditing) {
+                await update(productId, dataToSend);
+            } else {
+                await create(dataToSend);
+            }
+
+            // 👇 SOLUCIÓN: Arma la URL exacta con los filtros actuales para que refetch no los borre
+            const queryUrl = `products?search=${encodeURIComponent(search)}&categoryId=${category}&page=${currentPage - 1}&size=${PAGE_SIZE}`;
+            refetch(queryUrl);
+
+            setShowModal(false);
+        } catch (e) {
+            console.error("Error crítico al procesar handleSave:", e);
+        }
+    };
 
 
     return (
         <>
-
             <ProductModalForm
-                show={showModalForm}
-                onHide={() => setShowModalForm(false)}
-                product={updateProduct} onSave={handleSave}
+                show={showModal}
+                product={selectedProduct}
+                onHide={() => setShowModal(false)}
+                onSave={handleSave}
             />
-            <div className="grid grid-cols-12 gap-4 mt-2">
-                <div className="col-span-3 min-h-screen ">
+            <ExcelUploaderModal
+                show={showExcel}
+                onHide={() => setShowExcel(false)}
+                onImported={() => {
+                    refetch();
+                    setShowExcel(false);
+                }}
+            />
+            <div className="grid grid-cols-12 gap-5">
+                <div className="col-span-3">
                     <div className="sticky top-4">
                         <CategoryDropdown
                             mode="list"
-                            selected={selectedCategory}
-                            onSelect={(cat) =>
-                                updateParams({ category: cat?.id ?? null, page: 1, })
-                            }
+                            selected={category ? { id: Number(category) } : null}
+                            onSelect={(cat) => updateParams({ category: cat?.id ?? null, page: 1 })}
                         />
                         <Sidebar />
                     </div>
                 </div>
                 <div className="col-span-9">
-
-                    <div className="flex flex-col md:flex-row items-center mt-5 px-4">
-                        <div className="w-full md:w-1/3 mb-4 md:mb-0">
-
-                            <SearchBar value={searchTerm} onInputChange={(value) => updateParams({ search: value, page: 1 })} />
+                    <div className="bg-white rounded-xl shadow p-5">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-3xl font-bold"> Productos </h1>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowExcel(true)}
+                                    className="bg-green-600 text-white px-4 py-2 rounded"
+                                >
+                                    Importar Excel
+                                </button>
+                                {/* Nota: ExportProductExcel consumirá los 20 elementos de la página actual */}
+                                <button
+                                    onClick={() => ExportProductExcel(paginated)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                                >
+                                    <Download size={18} /> Excel
+                                </button>
+                                <button
+                                    onClick={handleCreate}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded"
+                                >
+                                    Nuevo Producto
+                                </button>
+                            </div>
                         </div>
-
-                        <button onClick={handleCreate} className="bg-blue-500 text-white px-4 py-2 rounded ml-6">
-                            Agregar Producto
-                        </button>
-
+                        <SearchBar
+                            value={search}
+                            onInputChange={(v) => updateParams({ search: v, page: 1 })}
+                        />
+                        <div className="mt-5">
+                            {loading && <p>Cargando...</p>}
+                            {error && (
+                                <div className="text-red-600">
+                                    {error.response?.data?.message || error.message || String(error)}
+                                </div>
+                            )}
+                            <ProductList products={paginated} handleUpdate={handleEdit} />
+                        </div>
                     </div>
-                    {loading && <p>Cargando productos...</p>}
-                    {error && <p>Error al cargar productos: {error.message}</p>}
-                    <ProductList products={paginatedProducts} handleUpdate={handleUpdate} />
                 </div>
-
             </div>
-
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(page) => updateParams({ page })} />
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => updateParams({ page })}
+            />
         </>
     );
 };

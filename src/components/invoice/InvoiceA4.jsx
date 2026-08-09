@@ -21,8 +21,7 @@ const InvoiceA4 = forwardRef(
         const now = new Date();
         const date = now.toLocaleDateString("es-AR");
         const time = now.toLocaleTimeString("es-AR");
-
-        const orderNumber = orderResponse?.id || Math.floor(Math.random() * 10000);
+        const orderNumber = orderResponse?.nextOrderNumber || orderResponse?.id || 1;
         const totalFinal = safeNumber(orderResponse?.totalAmount);
 
         const formatPrice = (value) => {
@@ -98,11 +97,16 @@ const InvoiceA4 = forwardRef(
                                 <tr key={i}>
 
                                     <td className="pl-3">{item.quantity}</td>
-                                    <td className="p-1">{item.productName || "Producto"}</td>
-                                    <td className="p-1">$ {formatPrice(item.unitePrice)}</td>
+                                    <td className="p-1"><h3 className="font-semibold">
+                                        {item.measure?.toUpperCase() === "UNICO"
+                                            ? item.productName
+                                            : `${item.productName} - ${item.measure}`
+                                        }
+                                    </h3></td>
+                                    <td className="p-1">$ {formatPrice(item.unitPrice)}</td>
                                     <td className="p-1">{item.discountApplied > 0 ? `${item.discountApplied}%` : "-"}</td>
                                     <td className="p-1">{isBudget ? "$" + formatPrice(item.finalPrice) : ""}</td>
-                                    <td className="p-1">$ {formatPrice(item.subtotal)}</td>
+                                    <td className="p-1"> {formatPrice(item.subtotal)}</td>
                                 </tr>
                             );
                         })}

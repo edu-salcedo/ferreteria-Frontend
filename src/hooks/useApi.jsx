@@ -11,75 +11,75 @@ export function useApi(url, options = {}, autoFetch = true) {
     const [loading, setLoading] = useState(autoFetch);
     const [error, setError] = useState(null);
 
-    // FETCH
-    const fetchData = useCallback(async () => {
+    // 🚀 Convertimos las opciones a String para romper la recreación de objetos en memoria
+    const serializedOptions = JSON.stringify(options);
+
+    // FETCH / REFETCH UNIFICADO
+    const fetchData = useCallback(async (customUrl) => {
+        const targetUrl = customUrl || url;
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get(url, options);
-            setData(response.data);
+            // Parseamos las opciones seguras de vuelta a objeto
+            const apiOptions = JSON.parse(serializedOptions);
+            const response = await api.get(targetUrl, apiOptions);
+            setData(response.data ?? []);
         } catch (err) {
             setError(err.message || 'Error al cargar datos');
         } finally {
             setLoading(false);
         }
-    }, [url]);
+        // 🚀 Cambiamos [options] por [serializedOptions] para frenar el bucle infinito
+    }, [url, serializedOptions]);
 
+    // Sincronizamos la carga automática si autoFetch está activo
     useEffect(() => {
         if (autoFetch) fetchData();
     }, [fetchData, autoFetch]);
 
-
-    // CREATE
-    // CREATE
+    // CREATE 
     const create = useCallback(async (formData, config = {}) => {
-        setLoading(true);
         try {
             const response = await api.post(url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                ...config, // 👈 permite onUploadProgress
+                ...config,
             });
             return response.data;
         } catch (err) {
             throw err;
-        } finally {
-            setLoading(false);
         }
     }, [url]);
 
-
-    // UPDATE
+    // UPDATE 
     const update = useCallback(async (id, formData) => {
-        setLoading(true);
         try {
             const response = await api.put(`${url}/${id}`, formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
-
             return response.data;
         } catch (err) {
-            console.log(err.response.data);
+            console.log(err.response?.data);
             throw err;
-        } finally {
-            setLoading(false);
         }
     }, [url]);
 
-
-    // DELETE
+    // DELETE 
     const remove = useCallback(async (id) => {
-        setLoading(true);
         try {
             await api.delete(`${url}/${id}`, options);
             return true;
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            throw err;
         }
     }, [url, options]);
 
-    const refetch = useCallback(() => {
-        fetchData();
-    }, [fetchData]);
-
-    return { data, loading, error, refetch, create, update, remove };
+    return {
+        data,
+        loading,
+        error,
+        refetch: fetchData,
+        create,
+        update,
+        remove
+    };
 }

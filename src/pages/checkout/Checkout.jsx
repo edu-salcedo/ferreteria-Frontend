@@ -8,6 +8,7 @@ import Modal from "../../components/modal/ConfirmModal";
 
 import InvoiceA4 from "../../components/invoice/InvoiceA4";
 
+const baseUrl = import.meta.env.VITE_API_URL;
 const Checkout = () => {
     const [isBudget, setIsBudget] = useState(false);
     const { cart, clearCart } = useCart();
@@ -15,10 +16,11 @@ const Checkout = () => {
     const [orderResponse, setOrderResponse] = useState(null);
     const [loading, setLoading] = useState(false);
     const [discount, setDiscount] = useState(0);
+    const [isInvoice, setIsInvoice] = useState(false);
     const [mode, setMode] = useState("budget"); // EFECTIVO | TARJETA 
     const [paymentMethod, setPaymentMethod] = useState(""); // EFECTIVO | TARJETA
     const printRef = useRef(null);
-    const baseUrl = import.meta.env.VITE_API_URL;
+
     const totalAmount = cart.reduce(
         (sum, item) => sum + item.salePrice * item.quantity,
         0
@@ -29,7 +31,10 @@ const Checkout = () => {
     const surChargeAmount = totalAmount * (surCharge / 100);
     const totalWithAdd = totalAmount + surChargeAmount;
     const totalWithDiscount = totalWithAdd * (1 - discount / 100);
-
+    const rawNumber = orderResponse?.nextOrderNumber || orderResponse?.id || 1;
+    const formattedNumber = rawNumber.toString().padStart(6, "0");
+    const prefix = mode === "sale" ? "Venta" : "Presupuesto";
+    const pdfFileName = `${prefix}_${formattedNumber}`;
     const handleAction = async (type) => {
         if (cart.length === 0) {
             toast.error("El carrito está vacío");
@@ -39,51 +44,52 @@ const Checkout = () => {
             toast.error("Selecciona un método de pago");
             return;
         }
-        // Mapear items válidos
-        const filteredItems = cart
-            .filter(item => item.id && item.quantity > 0)
-            .map(item => ({
-                productId: Number(item.id),
-                quantity: Number(item.quantity)
-            }));
 
-        if (filteredItems.length === 0) {
+        if (cart.length === 0) {
             toast.error("No hay items válidos");
             return;
         }
 
         setMode(type); // Presupuesto o venta
         setLoading(true);
-        console.log(type);
         try {
-            // Preparar payload
             const payload = {
-                items: filteredItems,
-                paymentMethod: paymentMethod.toUpperCase(), // EFECTIVO o TARJETA
-                discount: Number(discount) || 0
+                paymentMethod,
+                discount,
+                surcharge: surCharge,
+                totalAmount: totalWithDiscount,
+                invoice: isInvoice, // Agregamos el campo isInvoice al payload
+                items: cart.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    quantity: item.quantity
+                }))
             };
-
             let res;
+            let lastOrderId = 0;
 
             if (type === "budget") {
+
+                try {
+                    const lastRes = await axios.get(`${baseUrl}/order/last-id`);
+                    lastOrderId = Number(lastRes.data?.lastId) || 0;
+                } catch (err) {
+                    console.error("Error al leer el last-id", err);
+                }
                 // 👉 Presupuesto: calcula pero no guarda
                 res = await axios.post(`${baseUrl}/order/preview`, payload);
                 toast.success("Presupuesto generado");
+                setOrderResponse({ ...res.data, nextOrderNumber: lastOrderId + 1 });
+                console.log("total orders ", lastOrderId);
             } else {
                 console.log("Payload para venta:", payload);
                 // 👉 Venta: guarda en DB
                 res = await axios.post(`${baseUrl}/order`, payload);
-                console.log("POST OK");
-                console.log("Respuesta:", res);
                 toast.success("Compra realizada con éxito");
                 clearCart();
             }
-
-            console.log("Antes de setOrderResponse");
-            console.log(res);
             // Guardamos la respuesta para mostrar factura/presupuesto
-            setOrderResponse(res.data);
-
+            setOrderResponse({ ...res.data, nextOrderNumber: res.data?.id || (lastOrderId + 1) });
         } catch (err) {
             console.error(err);
 
@@ -103,10 +109,19 @@ const Checkout = () => {
         }
     };
 
-    const handlePrint = useReactToPrint({
-        contentRef: printRef
+    const handlePaymentMethodChange = (e) => {
+        const selectedMethod = e.target.value;
+        setPaymentMethod(selectedMethod);
 
-    });
+        // Si es TRANSFERENCIA, TARJETA o DEBITO, activa el checkbox automáticamente
+        if (selectedMethod === "TRANSFERENCIA" || selectedMethod === "TARJETA" || selectedMethod === "DEBITO") {
+            setIsInvoice(true);
+        } else {
+            setIsInvoice(false); // Opcional: desmarcar si vuelve a Efectivo o vacío
+        }
+    };
+
+    const handlePrint = useReactToPrint({ contentRef: printRef, documentTitle: pdfFileName });
 
     return (
         <div className="max-w-4xl mx-auto mt-10 px-4">
@@ -119,8 +134,16 @@ const Checkout = () => {
                 <div className="bg-white shadow-md rounded-lg p-6 mb-6">
                     <ul className="mb-4 divide-y">
                         {cart.map(item => (
-                            <li key={item.id} className="py-2 flex justify-between">
-                                <span>{item.quantity} x {item.name}</span>
+                            <li key={item.variantId} className="py-2 flex justify-between">
+                                <div className="flex gap-4 items-center">
+                                    <p>{item.quantity} x </p>
+                                    <h3 className="font-semibold">
+                                        {item.measure?.toUpperCase() === "UNICO"
+                                            ? item.productName
+                                            : `${item.productName} - ${item.measure}`
+                                        }
+                                    </h3>
+                                </div>
                                 <span className="font-mono">
                                     ${Math.floor(item.quantity * item.salePrice)}
                                 </span>
@@ -132,25 +155,44 @@ const Checkout = () => {
                     <div className="flex flex gap-6 mb-4  h-40">
                         <div className="flex flex-col gap-2 p-4 rounded bg-gray-200">
                             {/* Descuento */}
-                            <div className="flex items-center gap-2">
-                                <p>Descuento</p>
-                                <button
-                                    onClick={() => setDiscount(prev => Math.max(0, prev - 1))}
-                                    className="bg-gray-400 px-2 rounded"
-                                >-</button>
-                                <span>{discount} %</span>
-                                <button
-                                    onClick={() => setDiscount(prev => Math.min(100, prev + 1))}
-                                    className="bg-green-400 px-2 rounded"
-                                >+</button>
-                            </div>
 
+                            <div className="flex gap-4 justify-between">
+                                <div className="flex items-center gap-2">
+                                    <p>Descuento</p>
+                                    <button
+                                        onClick={() => setDiscount(prev => Math.max(0, prev - 1))}
+                                        className="bg-gray-400 px-2 rounded"
+                                    >-</button>
+
+                                    <span>{discount} %</span>
+                                    <button
+                                        onClick={() => setDiscount(prev => Math.min(100, prev + 1))}
+                                        className="bg-green-400 px-2 rounded"
+                                    >+</button>
+                                </div>
+                                <div className="flex items-center gap-3 select-none">
+                                    <label
+                                        htmlFor="isInvoiceCheckbox"
+                                        className="text-sm font-medium text-gray-700 cursor-pointer hover:text-gray-900"
+                                    >
+                                        Facturado
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        id="isInvoiceCheckbox"
+                                        checked={isInvoice}
+                                        onChange={() => setIsInvoice(prev => !prev)}
+                                        className="w-5 h-5 accent-blue-600 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                    />
+                                </div>
+
+                            </div>
                             {/* Medio de pago */}
                             <div className="flex items-center gap-2">
                                 <p>Medio de pago</p>
                                 <select
                                     value={paymentMethod}
-                                    onChange={e => setPaymentMethod(e.target.value)}
+                                    onChange={handlePaymentMethodChange}
                                     className={` border rounded px-3 py-2 ${!paymentMethod ? "text-gray-400" : "text-black"}`}
                                 >
                                     <option value="">
@@ -159,7 +201,7 @@ const Checkout = () => {
                                     <option value="EFECTIVO">Efectivo</option>
                                     <option value="TARJETA">Tarjeta (+10%)</option>
                                     <option value="TRANSFERENCIA">Transferencia</option>
-                                    <option value="DEbITO">Debito</option>
+                                    <option value="DEBITO">Debito</option>
                                 </select>
                             </div>
                         </div>

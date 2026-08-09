@@ -17,27 +17,29 @@ const Products = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const { data: productList, loading } = useApi("products");
-    const products = Array.isArray(productList) ? productList : [];
-
-    /* 🔹 DERIVAR ESTADO DESDE LA URL */
+    /* 🔹 1. DERIVAR ESTADO DESDE LA URL */
     const params = useMemo(
         () => new URLSearchParams(location.search),
         [location.search]
     );
 
     const searchTerm = params.get("search") || "";
-    const categoryId = params.get("category");
+    const categoryId = params.get("category") || "";
     const currentPage = Number(params.get("page")) || 1;
+    const selectedCategory = categoryId ? { id: Number(categoryId) } : null;
 
-    const selectedCategory = categoryId
-        ? { id: Number(categoryId) }
-        : null;
+    /* 🚀 2. CONSULTA DINÁMICA AL BACKEND (PAGINADA Y FILTRADA) */
+    // Le restamos 1 a currentPage porque Spring Boot procesa páginas desde el índice 0
+    const { data: pageData, loading, error } = useApi(
+        `products?search=${encodeURIComponent(searchTerm)}&categoryId=${categoryId}&page=${currentPage - 1}&size=${pageSize}`
+    );
 
-    /* 🔹 HELPERS PARA ACTUALIZAR URL */
+    const paginatedProducts = pageData?.content || [];
+
+    const totalPages = pageData?.totalPages || 1;
+
     const updateParams = (updates) => {
         const newParams = new URLSearchParams(location.search);
-
         Object.entries(updates).forEach(([key, value]) => {
             if (value === null || value === "" || value === undefined) {
                 newParams.delete(key);
@@ -45,51 +47,17 @@ const Products = () => {
                 newParams.set(key, value);
             }
         });
-
         navigate({ search: newParams.toString() });
     };
 
-    /* 🔹 FILTRADO */
-    const filteredProducts = products.filter(product => {
-        const matchesSearch = product.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-
-        const matchesCategory = selectedCategory
-            ? Number(product.categoryId) === selectedCategory.id
-            : true;
-
-        return matchesSearch && matchesCategory;
-    });
-
-    /* 🔹 PAGINACIÓN */
-    const totalPages = Math.max(
-        1,
-        Math.ceil(filteredProducts.length / pageSize)
-    );
-
-    const handleAddToCart = (product, quantity) => {
-        addToCart(
-            {
-                id: product.id,
-                name: product.name,
-                purchasePrice: product.purchasePrice,
-                salePrice: product.salePrice,
-                img: product.img,
-            },
-            quantity
-        );
-    }
+    const handleAddToCart = (variant, quantity, product) => {
+        addToCart(variant, quantity, product);
+    };
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);
         setShowModal(true);
     };
-    const startIndex = (currentPage - 1) * pageSize;
-    const paginatedProducts = filteredProducts.slice(
-        startIndex,
-        startIndex + pageSize
-    );
 
     return (
         <>
@@ -100,10 +68,7 @@ const Products = () => {
                         mode="list"
                         selected={selectedCategory}
                         onSelect={(cat) =>
-                            updateParams({
-                                category: cat?.id ?? null,
-                                page: 1,
-                            })
+                            updateParams({ category: cat?.id ?? null, page: 1 })
                         }
                     />
                 </div>
@@ -129,7 +94,6 @@ const Products = () => {
                                         key={product.id}
                                         product={product}
                                         showModal={() => handleOpenModal(product)}
-
                                     />
                                 ))}
                             </div>
@@ -143,6 +107,7 @@ const Products = () => {
                     </div>
                 </div>
             </div>
+
             <AddToCartModal
                 product={selectedProduct}
                 isOpen={showModal}
@@ -153,9 +118,7 @@ const Products = () => {
             <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={(page) =>
-                    updateParams({ page })
-                }
+                onPageChange={(page) => updateParams({ page })}
             />
         </>
     );

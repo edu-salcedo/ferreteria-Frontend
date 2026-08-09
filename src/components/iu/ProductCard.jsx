@@ -1,51 +1,63 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
+const baseUrl = import.meta.env.VITE_API_URL;
+
 const ProductCard = ({ product, showModal }) => {
-    const { id, img, name, purchasePrice, description, margin, salePrice, stock } = product;
+
+    const {
+        id,
+        img,
+        name,
+        description,
+        variants = []
+    } = product;
+
+    const minPrice = variants.length
+        ? Math.min(...variants.map(v => v.salePrice))
+        : 0;
+
+    const totalStock = variants.reduce(
+        (acc, v) => acc + (v.stock || 0),
+        0
+    );
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
 
-            {stock === 0 && (
-                <div className="relative top-2 right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">
+            {totalStock === 0 && (
+                <div className="absolute bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                     !
                 </div>
             )}
-            {/* Imagen */}
-            <Link
-                to={`/producto/${id}`} className="w-full h-30 flex items-center justify-center mb-4">
+
+            {/* CLICK EN IMAGEN ABRE MODAL */}
+            <div
+                className="cursor-pointer flex justify-center mb-3"
+                onClick={showModal}
+            >
                 <img
                     src={`http://localhost:8080${img}`}
                     alt={name}
-                    className="max-h-full object-contain"
+                    className="h-28 object-contain"
                 />
-            </Link>
-
-            {/* Nombre */}
-            <h3 className="text-base font-semibold text-gray-800 mb-1">
-                {name}
-            </h3>
-
-            {/* Descripción */}
-            {description && (
-                <p className="text-base text-gray-600 mb-2 line-clamp-2">
-                    {margin}
-                </p>
-            )}
-
-            {/* Precio */}
-            <div className="text-base font-bold mt-auto flex justify-around">
-                <p className="text-gray-500">${purchasePrice}</p>
-                <p className="text-green-500 font-bold">${salePrice}</p>
-
             </div>
-            <button
-                onClick={showModal}
-                className="mt-2 bg-blue-500 cursor hover:bg-blue-600 text-white py-1 px-4 rounded-md transition-colors duration-200"
-            >
-                Agregar al carrito
-            </button>
+
+            <h3 className="font-semibold">{name}</h3>
+
+            <p className="text-sm text-gray-500 line-clamp-2">
+                {description}
+            </p>
+
+            <div className="mt-2">
+                <p className="text-green-600 font-bold">
+                    Desde ${minPrice.toLocaleString()}
+                </p>
+
+                <p className="text-xs text-gray-400">
+                    {variants.length} variantes
+                </p>
+            </div>
+
         </div>
     );
 };

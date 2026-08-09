@@ -2,95 +2,176 @@ import { useEffect, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import CategoryDropdown from '../iu/CategoryDropdown';
 
-const API_URL = 'http://localhost:8080/products';
-
+const API_URL = import.meta.env.VITE_API_URL;
 const ProductModalForm = ({ product, show, onHide, onSave, }) => {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [img, setImg] = useState('');
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [img, setImg] = useState("");
     const [category, setCategory] = useState(null);
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState(1);
-    const [profitMargin, setProfitMargin] = useState('');
-    const { create, update } = useApi(API_URL);
-    const [errors, setErrors] = useState({ name: false, category: false, stock: false, price: false, profitMargin: false });
+    const [variants, setVariants] = useState([]);
     const [imageFile, setImageFile] = useState(null);
+    const [errors, setErrors] = useState({ name: false, category: false });
 
     useEffect(() => {
+
         if (product) {
-            setName(product.name || '');
-            setDescription(product.description || '');
-            setImg(product.img ? `http://localhost:8080${product.img}` : '');
-            setCategory(product.categoryId ? {
-                id: product.categoryId,
-                name: product.categoryName,
-            } : null);
-            setStock(product.stock || 1);
-            setPrice(product.purchasePrice || 0);
-            setProfitMargin(product.profitMargin || 0);
+
+            setName(product.name ?? "");
+            setDescription(product.description ?? "");
+            setImg(product.img ? API_URL + product.img : "");
+            setCategory({ id: product.categoryId, name: product.categoryName });
+            setVariants(
+                product.variants?.length
+                    ? product.variants
+                    : []
+            );
+
             setImageFile(null);
+
         } else {
-            setName('');
-            setDescription('');
-            setImg('');
-            setCategory(null); // Valor por defecto
-            setStock(1);
-            setPrice('');
+            setName("");
+            setDescription("");
+            setImg("");
+            setCategory(null);
+            setVariants([
+                {
+                    measure: "",
+                    purchasePrice: 0,
+                    profitMargin: 40,
+                    salePrice: 0,
+                    stock: 0
+                }
+            ]);
+
             setImageFile(null);
-            setProfitMargin('');
-            setErrors({ name: false, category: false, stock: false, price: false, profitMargin: false });
         }
     }, [product, show]);
+
+    const addVariant = () => {
+
+        setVariants(prev => [
+            ...prev, {
+                measure: "",
+                purchasePrice: 0,
+                profitMargin: 40,
+                salePrice: 0,
+                stock: 0
+            }
+        ]);
+
+    };
+    const removeVariant = (index) => {
+
+        setVariants(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const updateVariant = (index, field, value) => {
+        setVariants(prev => prev.map((v, i) => {
+            if (i !== index) return v; // Si no es la fila editada, la dejamos igual
+
+            // Creamos una nueva copia limpia de la variante editada
+            const updatedVariant = { ...v, [field]: value };
+
+            // Si cambió el precio de compra o el margen de ganancia, recalculamos la venta
+            if (field === "purchasePrice" || field === "profitMargin") {
+                const purchase = Number(updatedVariant.purchasePrice) || 0;
+                const margin = Number(updatedVariant.profitMargin) || 0;
+
+                // Cálculo base del precio de venta
+                let calculatedSale = purchase + (purchase * margin / 100);
+
+                // OPCIONAL (Altamente recomendado): Redondeo al techo de múltiplos de 50 idéntico a tu Java
+                if (calculatedSale > 0) {
+                    calculatedSale = Math.ceil(calculatedSale / 50) * 50;
+                }
+
+                updatedVariant.salePrice = calculatedSale;
+            }
+
+            return updatedVariant;
+        }));
+    };
+
+
+    const validate = () => {
+
+        const e = {};
+
+        if (!name.trim()) { e.name = true; }
+
+        if (!category) { e.category = true; }
+
+        if (variants.length === 0) {
+
+            alert("Debe agregar una variante.");
+            return false;
+        }
+
+        for (const v of variants) {
+
+            if (!v.measure) {
+
+                alert("Todas las variantes deben tener medida.");
+                return false;
+            }
+
+            if (Number(v.purchasePrice) <= 0) {
+
+                alert("Precio inválido.");
+                return false;
+            }
+        }
+        setErrors(e);
+
+        return Object.keys(e).length === 0;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validaciones básicas
-        if (!name.trim()) return setErrors(prev => ({ ...prev, name: true }));
-        if (!category) return setErrors(prev => ({ ...prev, category: true }));
-        if (Number(stock) <= 0) return setErrors(prev => ({ ...prev, stock: true }));
-        if (Number(price) <= 0) return setErrors(prev => ({ ...prev, price: true }));
-        if (Number(profitMargin) <= 0) return setErrors(prev => ({ ...prev, profitMargin: true }));
+        // 1. Usamos tu función de validación que sí revisa correctamente el arreglo de variantes
+        if (!validate()) return;
 
         try {
-            // Construimos el objeto del producto sin la propiedad 'img'
+            // 2. Construimos el objeto del producto adaptado a tu lógica de variantes
             const productData = {
                 id: product?.id || null,
-                name: name.trim() || "Sin nombre",
-                description: description.trim() || "",
+                name: name.trim(),
+                description: description.trim(),
                 categoryId: category?.id || null,
-                stock: Number(stock) || 0,
-                purchasePrice: price ? Number(price) : BigInt(0),
-                profitMargin: profitMargin ? Number(profitMargin) : 0,
                 state: product?.state ?? true,
+                // Agregamos las variantes reales del estado al objeto final
+                variants: variants.map(v => ({
+                    ...v,
+                    purchasePrice: Number(v.purchasePrice),
+                    profitMargin: Number(v.profitMargin),
+                    salePrice: Number(v.salePrice),
+                    stock: Number(v.stock)
+                }))
             };
 
-            // Creamos FormData
+            // 3. Creamos el FormData para el envío Multipart
             const formData = new FormData();
+            // Enviamos el objeto completo serializado como string (común en controladores @RequestPart de Java/Spring)
             formData.append("product", JSON.stringify(productData));
 
-            // Manejo de imagen
+            // Manejo del archivo binario de la imagen
             if (imageFile) {
-                // Si hay archivo nuevo, se envía
                 formData.append("image", imageFile);
             }
 
-            // Llamada a la API
-            let response;
-            if (product) {
-                response = await update(product.id, formData); // update
-                onSave("update", response);
-            } else {
-                response = await create(formData); // create
-                onSave("create", response);
-            }
+            // 4. CORRECCIÓN CRÍTICA: No llames a create/update aquí dentro. 
+            // Delegamos todo el proceso al componente padre mediante onSave.
+            const action = product ? "update" : "create";
+            await onSave(action, formData);
 
-            console.log("FormData entries:", [...formData.entries()]); // debug
+            // Cerramos el modal limpiamente
             onHide();
         } catch (err) {
-            console.error("Error al guardar producto:", err);
+            console.error("Error al procesar el envío del formulario:", err);
         }
     };
+
 
 
     const handleSelectCategory = (category) => { setCategory(category) };
@@ -108,137 +189,185 @@ const ProductModalForm = ({ product, show, onHide, onSave, }) => {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto p-6">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
 
-                    {/* Nombre */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Nombre</label>
-                        <input
-                            type="text"
-                            placeholder="Nombre del producto"
-                            value={name}
-                            onChange={e => {
-                                setName(e.target.value);
-                                if (errors.name && e.target.value.trim() !== '') {
-                                    setErrors(prev => ({ ...prev, name: false }));
-                                }
-                            }}
-                            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {errors.name && <p className="text-red-500 text-sm mt-1">El nombre es obligatorio.</p>}
+                    <div className="grid grid-cols-2 gap-6">
+
+                        <div>
+                            <label className="font-semibold"> Nombre</label>
+                            <input
+                                className="w-full border rounded p-2"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="font-semibold"> Categoría  </label>
+
+                            <CategoryDropdown
+                                selected={category}
+                                onSelect={setCategory}
+                            />
+
+                        </div>
+
                     </div>
 
-                    {/* Descripción */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Descripción</label>
-                        <input
-                            type="text"
-                            placeholder="Descripción del producto"
+                    <div className="mt-4">
+
+                        <label className="font-semibold"> Descripción</label>
+
+                        <textarea
+                            rows={3}
+                            className="w-full border rounded p-2"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            className="w-full border rounded px-3 py-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
 
-                    {/* Imagen */}
-                    <div className='flex gap-4'>
-                        <div className="w-1/2">
-                            <label className="block text-sm font-medium mb-1">Imagen</label>
+                    <div className="mt-4 flex gap-6">
+                        {/* imagen */}
+                        <div>
                             <input
                                 type="file"
                                 accept="image/*"
                                 onChange={e => {
-                                    if (e.target.files && e.target.files[0]) {
+
+                                    if (e.target.files[0]) {
+
                                         setImageFile(e.target.files[0]);
-                                        setImg(URL.createObjectURL(e.target.files[0])); // Para mostrar preview
+                                        setImg(URL.createObjectURL(e.target.files[0])
+                                        );
                                     }
+
                                 }}
-                                className="w-full border rounded px-3 py-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            {img && (
 
-                                <img
-                                    src={img}
-
-                                    alt="Preview"
-                                    className="mt-2 w-32 h-32 object-cover rounded border"
-                                />
-                            )}
-                        </div>
-                        {/* dropdon category */}
-                        <div className='w-1/2'>
-                            <label className="block text-sm font-medium mb-1">Categoría</label>
-                            <CategoryDropdown selected={category} onSelect={handleSelectCategory} />
-                            {errors.category && <p className="text-red-500 text-sm mt-1">La categoría es obligatoria.</p>}
-                            <p className="text-xs text-gray-500 mt-5">
-                                {img}
-                            </p>
                         </div>
 
-                    </div>
+                        {img &&
+                            <img src={img} className="w-32 h-32 object-cover rounded border" alt="" />
+                        }
 
-                    <div className='flex gap-4'>
-                        {/* Cantidad */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Cantidad</label>
-                            <input
-                                type="number"
-                                value={stock}
-                                onChange={e => {
-                                    setStock(e.target.value);
-                                    if (errors.stock && Number(e.target.value) > 0) {
-                                        setErrors(prev => ({ ...prev, stock: false }));
-                                    }
-                                }}
-                                className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.stock ? 'border-red-500' : 'border-gray-300'}`}
-                            />
-                            {errors.stock && <p className="text-red-500 text-sm mt-1">La cantidad debe ser mayor que 0.</p>}
+                    </div><div className="mt-8">
+
+                        <div className="flex justify-between items-center mb-3">
+
+                            <h2 className="text-xl font-semibold"> Variantes </h2>
+
+                            <button
+                                type="button"
+                                onClick={addVariant}
+                                className="bg-green-600 text-white px-3 py-2 rounded"
+                            >
+                                + Agregar variante
+                            </button>
+
                         </div>
 
-                        {/* Precio */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Precio</label>
-                            <input
-                                type="number"
-                                value={price}
-                                onChange={e => {
-                                    setPrice(e.target.value);
-                                    if (errors.price && Number(e.target.value) > 0) {
-                                        setErrors(prev => ({ ...prev, price: false }));
-                                    }
-                                }}
-                                className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
-                            />
-                            {errors.price && <p className="text-red-500 text-sm mt-1">El precio debe ser mayor que 0.</p>}
-                        </div>
+                        <table className="w-full border">
 
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Porcentaje de ganacia</label>
-                        <input
-                            type="number"
-                            value={profitMargin}
-                            onChange={e => {
-                                setProfitMargin(e.target.value);
-                                if (errors.profitMargin && Number(e.target.value) > 0) {
-                                    setErrors(prev => ({ ...prev, profitMargin: false }));
+                            <thead>
+
+                                <tr className="bg-gray-100">
+
+                                    <th className="border p-2">Medida</th>
+                                    <th className="border p-2">Compra</th>
+                                    <th className="border p-2"> % </th>
+                                    <th className="border p-2">Venta</th>
+                                    <th className="border p-2">Stock</th>
+                                    <th className="border p-2">eliminar </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {
+                                    variants.map((variant, index) => (
+
+                                        <tr key={index}>
+
+                                            <td className="border w-[40%]">
+                                                <input
+                                                    className="w-full p-2"
+                                                    value={variant.measure}
+                                                    onChange={e => updateVariant(index, "measure", e.target.value)}
+                                                />
+                                            </td>
+
+                                            <td className="border w-[12%]">
+                                                <input
+                                                    type="number"
+                                                    className="w-full p-2"
+                                                    value={variant.purchasePrice}
+                                                    onChange={e => updateVariant(index, "purchasePrice", Number(e.target.value))}
+                                                />
+                                            </td>
+                                            <td className="border w-[15%]">
+                                                <input
+                                                    type="number"
+                                                    className="w-full p-2"
+                                                    value={variant.profitMargin}
+                                                    onChange={e =>
+                                                        updateVariant(index, "profitMargin", Number(e.target.value))}
+                                                />
+                                            </td>
+                                            <td className="border w-[20%]">
+                                                <input
+                                                    disabled
+                                                    className="w-full bg-gray-100 p-2"
+                                                    value={Number(variant.salePrice).toFixed(2)}
+                                                />
+                                            </td>
+                                            <td className="border w-[8%]">
+                                                <input
+                                                    type="number"
+                                                    className="w-full p-2"
+                                                    value={variant.stock}
+                                                    onChange={e => updateVariant(index, "stock", Number(e.target.value))}
+                                                />
+                                            </td>
+
+                                            <td className="border text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeVariant(index)}
+                                                    className="text-red-600"
+                                                >
+                                                    🗑
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
                                 }
-                            }}
-                            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {errors.price && <p className="text-red-500 text-sm mt-1">El precio debe ser mayor que 0.</p>}
+                            </tbody>
+                        </table>
                     </div>
+                    <div className="flex justify-end gap-3 mt-8">
+                        <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-6 py-2 rounded"
+                        >
+                            {product ? "Actualizar" : "Crear"}
 
-                    {/* Botones */}
-                    <div className="flex justify-end gap-3 mt-4">
-                        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                            {product ? "Editar" : "Agregar"}
                         </button>
-                        <button type="button" onClick={onHide} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+
+                        <button
+
+                            type="button"
+                            onClick={onHide}
+                            className="bg-gray-300 px-6 py-2 rounded"
+                        >
                             Cancelar
                         </button>
+
                     </div>
+
                 </form>
+
             </div >
         </div >
     );

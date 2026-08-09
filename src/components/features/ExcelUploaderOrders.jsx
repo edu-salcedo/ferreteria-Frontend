@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useApi } from "../../hooks/useApi";
-
+import axios from "axios";
 const ExcelUploader = () => {
 
     const [file, setFile] = useState(null);
@@ -11,7 +11,7 @@ const ExcelUploader = () => {
     const [result, setResult] = useState(null);
     const inputRef = useRef(null);
 
-    const { create, loading } = useApi("excel/import", {}, false);
+    const { create, loading } = useApi("sales/import", {}, false);
 
     // ==========================
     // DRAG
@@ -92,7 +92,7 @@ const ExcelUploader = () => {
             );
 
             setResult(response);
-
+            console.log(response);
             setMessage("Archivo importado correctamente");
 
 
@@ -120,17 +120,13 @@ const ExcelUploader = () => {
 
     };
 
-
-
     return (
 
         <div className=" max-w-lg mx-auto mt-10 bg-white shadow-lg rounded-lgp-6 ">
 
             <h2 className=" text-2xl font-bold mb-5 text-gray-800">
-                Importar productos Excel
+                Importar ventas Excel
             </h2>
-
-
             {/* DROP AREA */}
 
             <div
@@ -142,25 +138,25 @@ const ExcelUploader = () => {
                 onClick={() => inputRef.current.click()}
 
                 className={`
-                    h-44
-                    border-2
-                    border-dashed
-                    rounded-lg
-                    flex
-                    flex-col
-                    justify-center
-                    items-center
-                    cursor-pointer
-                    transition
-
-                    ${dragActive
+                       h-44
+                       border-2
+                       border-dashed
+                       rounded-lg
+                       flex
+                       flex-col
+                       justify-center
+                       items-center
+                       cursor-pointer
+                       transition
+   
+                       ${dragActive
                         ?
                         "border-blue-500 bg-blue-50"
                         :
                         "border-gray-400 bg-gray-50"
                     }
-
-                `}
+   
+                   `}
             >
                 <input
                     ref={inputRef}
@@ -205,8 +201,20 @@ const ExcelUploader = () => {
             <button
 
                 onClick={handleUpload}
+
                 disabled={loading || processing}
-                className="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded disabled:opacity-50"
+
+                className="
+                       mt-5
+                       w-full
+                       bg-blue-600
+                       hover:bg-blue-700
+                       text-white
+                       py-2
+                       rounded
+                       disabled:opacity-50
+                   "
+
             >
 
                 {processing ? "Procesando..." : "Importar Excel"}
@@ -227,14 +235,9 @@ const ExcelUploader = () => {
 
                 <p className="text-center text-blue-600 mt-2 animate-pulse">
 
-                    Guardando productos y variantes...
-
+                    Guardando ventas...
                 </p>
-
             }
-
-
-
 
             {/* MENSAJE */}
 
@@ -248,11 +251,7 @@ const ExcelUploader = () => {
 
             }
 
-
-
-
             {/* RESULTADO IMPORTACION */}
-
 
             {
                 result &&
@@ -261,31 +260,10 @@ const ExcelUploader = () => {
 
                     <h3 className="font-bold mb-3"> Resultado: </h3>
 
-                    <p>
-                        📂 Categorías nuevas: {" "} {result.newCategories}
-                    </p>
-
-                    <p>
-                        🆕 Productos creados:  {" "} {result.newProducts}
-                    </p>
-
-
-                    <p>
-                        🔄 Productos actualizados: {" "} {result.updatedProducts}
-                    </p>
-
-                    <p>
-                        📦 Variantes nuevas:{" "} {result.newVariants}
-                    </p>
-
-                    <p>
-                        ♻️ Variantes actualizadas:{" "} {result.updatedVariants}
-                    </p>
+                    <p>📂 Ventas nuevas: {" "} {result.newOrders}</p>
                 </div>
             }
         </div>
     );
 };
-
-
 export default ExcelUploader;

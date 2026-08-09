@@ -15,45 +15,58 @@ const CartProvider = ({ children }) => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (product, quantity) => {
-        const existing = cart.find(p => p.id === product.id);
+    const addToCart = (variant, quantity, product) => {
 
-        if (existing) {
-            setCart(prev =>
-                prev.map(p =>
-                    p.id === product.id
-                        ? { ...p, quantity: p.quantity + quantity }
-                        : p
-                )
-            );
-            toast.info(`Se actualizó la cantidad de ${product.name} en el carrito`);
-        } else {
-            setCart(prev => [...prev, { ...product, quantity }]);
-            toast.success(`${product.name} agregado al carrito`);
-        }
+        setCart(prev => {
+
+            const exists = prev.find(i => i.variantId === variant.id);
+
+            if (exists) {
+                return prev.map(i =>
+                    i.variantId === variant.id
+                        ? { ...i, quantity: i.quantity + quantity }
+                        : i
+                );
+            }
+
+            return [
+                ...prev,
+                {
+                    variantId: variant.id,
+                    productId: product.id,
+                    productName: product.name,
+                    measure: variant.measure,
+                    salePrice: variant.salePrice,
+                    purchasePrice: variant.purchasePrice,
+                    quantity,
+                    img: product.img,
+                    stock: variant.stock
+                }
+            ];
+        });
     };
 
-    const removeFromCart = (id) => {
-        const item = cart.find(p => p.id === id);
-        setCart(prev => prev.filter(p => p.id !== id));
-        if (item) toast.success(`${item.name} eliminado del carrito`);
+    const removeFromCart = (variantId) => {
+        const item = cart.find(p => p.variantId === variantId);
+        setCart(prev => prev.filter(p => p.variantId !== variantId));
+        if (item) toast.success(`${item.productName} eliminado del carrito`);
     };
 
-    const increaseQuantity = (id) => {
+    const increaseQuantity = (variantId) => {
         setCart(cart =>
             cart.map(item =>
-                item.id === id
+                item.variantId === variantId
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             )
         );
     };
 
-    const decreaseQuantity = (id) => {
+    const decreaseQuantity = (variantId) => {
         setCart(cart =>
             cart
                 .map(item =>
-                    item.id === id
+                    item.variantId === variantId
                         ? { ...item, quantity: item.quantity - 1 }
                         : item
                 )

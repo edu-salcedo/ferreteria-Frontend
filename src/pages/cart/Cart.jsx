@@ -1,10 +1,10 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-
+const baseUrl = import.meta.env.VITE_API_URL;
 const Cart = () => {
     const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } = useCart();
-
     // 2. Calculamos el total aplicando el 40% a cada item
     const total = cart.reduce(
         (acc, item) =>
@@ -33,15 +33,20 @@ const Cart = () => {
 
             <div className="space-y-4">
                 {cart.map(item => (
-                    <div key={item.id} className="flex items-center gap-4 border rounded-lg p-4">
+                    <div key={item.variantId} className="flex items-center gap-4 border rounded-lg p-4">
                         <img
-                            src={`http://localhost:8080${item.img}`}
-                            alt={item.name}
+                            src={baseUrl + item.img}
+                            alt={item.productName}
                             className="w-20 h-20 object-contain"
                         />
 
                         <div className="flex-1">
-                            <h3 className="font-semibold">{item.name}</h3>
+                            <h3 className="font-semibold">
+                                {item.measure?.toUpperCase() === "UNICO"
+                                    ? item.productName
+                                    : `${item.productName} - ${item.measure}`
+                                }
+                            </h3>
                             {/* Mostramos el precio unitario con el 40% ya sumado */}
                             <p className="text-sm text-gray-400">
                                 Costo base: ${Math.round(item.purchasePrice)} | Precio venta: ${Math.round(item.salePrice)}
@@ -55,9 +60,9 @@ const Cart = () => {
 
                         <div className="flex gap-4">
                             <div className="flex items-center gap-2">
-                                <button onClick={() => decreaseQuantity(item.id)} className=" bg-gray-400 px-2 rounded">-</button>
+                                <button onClick={() => decreaseQuantity(item.variantId)} className=" bg-gray-400 px-2 rounded">-</button>
                                 <span>{item.quantity}</span>
-                                <button onClick={() => increaseQuantity(item.id)} className="bg-gray-400 px-2 rounded">+</button>
+                                <button onClick={() => increaseQuantity(item.variantId)} className="bg-gray-400 px-2 rounded">+</button>
                             </div>
                         </div>
 
@@ -67,7 +72,7 @@ const Cart = () => {
                         </p>
 
                         <button
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.variantId)}
                             className="text-red-500 hover:underline ml-4"
                         >
                             Eliminar
