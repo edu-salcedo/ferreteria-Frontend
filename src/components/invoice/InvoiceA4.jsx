@@ -59,7 +59,7 @@ const InvoiceA4 = forwardRef(
                         <p className="font-bold text-[18px]">PRESUPUESTO </p>
                         {/* <p className="font-bold text-[18px]">{mode === "budget" ? "PRESUPUESTO" : "VENTA"}</p> */}
                         <div className="text-[14px]">
-                            <p>N°: {orderNumber}</p>
+                            <p>N°: 0000-{orderNumber}</p>
                             <p>Fecha: {date}</p>
                             <p>Hora: {time}</p>
                         </div>
